@@ -24,3 +24,14 @@ class AccountBalanceReport(models.TransientModel):
     def _print_report(self, data):
         records, data = self._get_report_data(data)
         return self.env.ref('accounting_pdf_reports.action_report_trial_balance').report_action(records, data=data)
+
+    def print_excel_report(self):
+        self.ensure_one()
+        data = {}
+        data['ids'] = self.env.context.get('active_ids', [])
+        data['model'] = self.env.context.get('active_model', 'ir.ui.menu')
+        data['form'] = self.read(['date_from', 'date_to', 'journal_ids', 'target_move', 'display_account', 'analytic_account_ids'])[0]
+        used_context = self._build_contexts(data)
+        data['form']['used_context'] = dict(used_context, lang=self.env.context.get('lang') or 'en_US')
+        records, data = self._get_report_data(data)
+        return self.env.ref('accounting_pdf_reports.action_report_trial_balance_xlsx').report_action(records, data=data)

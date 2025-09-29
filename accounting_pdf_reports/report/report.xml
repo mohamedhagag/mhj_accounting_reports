@@ -68,4 +68,29 @@
         <field name="binding_type">report</field>
     </record>
 
+    <!-- Excel Export Actions -->
+    <record id="action_report_general_ledger_xlsx" model="ir.actions.report">
+        <field name="name">General Ledger (Excel)</field>
+        <field name="model">account.report.general.ledger</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">accounting_pdf_reports.general_ledger_xlsx</field>
+        <field name="report_file">accounting_pdf_reports.general_ledger_xlsx</field>
+    </record>
+
+    <record id="action_report_partnerledger_xlsx" model="ir.actions.report">
+        <field name="name">Partner Ledger (Excel)</field>
+        <field name="model">account.report.partner.ledger</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">accounting_pdf_reports.partner_ledger_xlsx</field>
+        <field name="report_file">accounting_pdf_reports.partner_ledger_xlsx</field>
+    </record>
+
+    <record id="action_report_trial_balance_xlsx" model="ir.actions.report">
+        <field name="name">Trial Balance (Excel)</field>
+        <field name="model">account.balance.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">accounting_pdf_reports.trial_balance_xlsx</field>
+        <field name="report_file">accounting_pdf_reports.trial_balance_xlsx</field>
+    </record>
+
 </odoo>

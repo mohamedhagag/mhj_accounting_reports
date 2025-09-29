@@ -12,7 +12,7 @@
     'maintainer': 'Odoo Mates',
     'support': 'odoomates@gmail.com',
     'website': 'https://www.youtube.com/watch?v=yA4NLwOLZms',
-    'depends': ['account'],
+    'depends': ['account', 'report_xlsx'],
     'live_test_url': 'https://www.youtube.com/watch?v=yA4NLwOLZms',
     'data': [
         'security/ir.model.access.csv',
@@ -42,7 +42,7 @@
         'views/optimization_tools.xml',
     ],
     'external_dependencies': {
-        'python': ['psutil'],
+        'python': ['psutil', 'xlsxwriter'],
     },
     'pre_init_hook': '_pre_init_clean_m2m_models',
     'images': ['static/description/banner.gif'],
