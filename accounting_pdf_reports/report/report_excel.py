@@ -14,17 +14,15 @@ class GeneralLedgerXlsx(models.AbstractModel):
     _description = 'General Ledger XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def create_xlsx_report(self, docids, data):
-        """Main method called by Odoo's report_xlsx"""
+    def generate_xlsx_report(self, workbook, data, objects, report):
+        """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
         
-        # Get documents (partners or objects)
-        docs = self.env[data.get('model', 'res.partner')].browse(docids)
-        return self.generate_xlsx_report(self.workbook, data, docs)
+        self._generate_general_ledger_xlsx(workbook, data, objects)
 
-    def generate_xlsx_report(self, workbook, data, partners):
+    def _generate_general_ledger_xlsx(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
@@ -139,17 +137,15 @@ class PartnerLedgerXlsx(models.AbstractModel):
     _description = 'Partner Ledger XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def create_xlsx_report(self, docids, data):
-        """Main method called by Odoo's report_xlsx"""
+    def generate_xlsx_report(self, workbook, data, objects, report):
+        """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
         
-        # Get documents (partners or objects)
-        docs = self.env[data.get('model', 'res.partner')].browse(docids)
-        return self.generate_xlsx_report(self.workbook, data, docs)
+        self._generate_partner_ledger_xlsx(workbook, data, objects)
 
-    def generate_xlsx_report(self, workbook, data, partners):
+    def _generate_partner_ledger_xlsx(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
@@ -266,17 +262,15 @@ class TrialBalanceXlsx(models.AbstractModel):
     _description = 'Trial Balance XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def create_xlsx_report(self, docids, data):
-        """Main method called by Odoo's report_xlsx"""
+    def generate_xlsx_report(self, workbook, data, objects, report):
+        """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
         
-        # Get documents (partners or objects)
-        docs = self.env[data.get('model', 'res.partner')].browse(docids)
-        return self.generate_xlsx_report(self.workbook, data, docs)
+        self._generate_trial_balance_xlsx(workbook, data, objects)
 
-    def generate_xlsx_report(self, workbook, data, partners):
+    def _generate_trial_balance_xlsx(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
