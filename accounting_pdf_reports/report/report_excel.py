@@ -14,7 +14,7 @@ class GeneralLedgerXlsx(models.AbstractModel):
     _description = 'General Ledger XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def generate_xlsx_report(self, workbook, data, objects, report):
+    def generate_xlsx_report(self, workbook, data, objects):
         """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
@@ -137,7 +137,7 @@ class PartnerLedgerXlsx(models.AbstractModel):
     _description = 'Partner Ledger XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def generate_xlsx_report(self, workbook, data, objects, report):
+    def generate_xlsx_report(self, workbook, data, objects):
         """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
@@ -262,7 +262,7 @@ class TrialBalanceXlsx(models.AbstractModel):
     _description = 'Trial Balance XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     
-    def generate_xlsx_report(self, workbook, data, objects, report):
+    def generate_xlsx_report(self, workbook, data, objects):
         """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
