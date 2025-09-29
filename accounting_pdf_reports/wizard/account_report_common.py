@@ -19,6 +19,23 @@ class AccountCommonReport(models.TransientModel):
     target_move = fields.Selection([('posted', 'All Posted Entries'),
                                     ('all', 'All Entries'),
                                     ], string='Target Moves', required=True, default='posted')
+    
+    # Memory optimization fields
+    enable_pagination = fields.Boolean(
+        string='Enable Pagination',
+        default=True,
+        help='Enable pagination for large datasets to avoid memory issues'
+    )
+    max_records_per_account = fields.Integer(
+        string='Max Records per Account',
+        default=50000,
+        help='Maximum number of journal entries to process per account (0 = no limit)'
+    )
+    batch_size = fields.Integer(
+        string='Batch Size', 
+        default=10000,
+        help='Number of records to process in each batch'
+    )
 
     @api.onchange('company_id')
     def _onchange_company_id(self):
@@ -36,6 +53,10 @@ class AccountCommonReport(models.TransientModel):
         result['date_to'] = data['form']['date_to'] or False
         result['strict_range'] = True if result['date_from'] else False
         result['company_id'] = data['form']['company_id'][0] or False
+        # Add optimization settings
+        result['enable_pagination'] = data['form'].get('enable_pagination', True)
+        result['max_records_per_account'] = data['form'].get('max_records_per_account', 50000)
+        result['batch_size'] = data['form'].get('batch_size', 10000)
         return result
 
     def _print_report(self, data):
@@ -46,7 +67,8 @@ class AccountCommonReport(models.TransientModel):
         data = {}
         data['ids'] = self.env.context.get('active_ids', [])
         data['model'] = self.env.context.get('active_model', 'ir.ui.menu')
-        data['form'] = self.read(['date_from', 'date_to', 'journal_ids', 'target_move', 'company_id'])[0]
+        data['form'] = self.read(['date_from', 'date_to', 'journal_ids', 'target_move', 'company_id', 
+                                'enable_pagination', 'max_records_per_account', 'batch_size'])[0]
         used_context = self._build_contexts(data)
         data['form']['used_context'] = dict(used_context, lang=get_lang(self.env).code)
         return self.with_context(discard_logo_check=True)._print_report(data)

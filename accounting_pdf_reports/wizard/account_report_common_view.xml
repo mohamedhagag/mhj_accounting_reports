@@ -15,6 +15,11 @@
                 <field name="journal_ids" widget="many2many_tags" options="{'no_create': True}"/>
                 <field name="company_id" invisible="1"/>
             </group>
+            <group string="Performance Options" col="4">
+                <field name="enable_pagination"/>
+                <field name="max_records_per_account" attrs="{'invisible': [('enable_pagination', '=', False)]}"/>
+                <field name="batch_size" attrs="{'invisible': [('enable_pagination', '=', False)]}"/>
+            </group>
             <footer>
                 <button name="check_report" string="Print" type="object" default_focus="1" class="oe_highlight" data-hotkey="q"/>
                 <button string="Cancel" class="btn btn-secondary" special="cancel" data-hotkey="z" />

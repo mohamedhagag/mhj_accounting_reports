@@ -1,4 +1,5 @@
 import time
+import gc
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 from odoo.tools import float_is_zero
@@ -86,49 +87,68 @@ class ReportAgedPartnerBalance(models.AbstractModel):
         if not partner_ids:
             return [], [], {}
 
+        # Process partners in batches to avoid memory issues
+        PARTNER_BATCH_SIZE = 1000
+        partner_batches = [partner_ids[i:i + PARTNER_BATCH_SIZE] 
+                          for i in range(0, len(partner_ids), PARTNER_BATCH_SIZE)]
+        
         # This dictionary will store the not due amount of all partners
         undue_amounts = {}
-        query = '''SELECT l.id
-                FROM account_move_line AS l, account_account, account_move am
-                WHERE (l.account_id = account_account.id) AND (l.move_id = am.id)
-                    AND (am.state IN %s)
-                    AND (account_account.account_type IN %s)
-                    AND (COALESCE(l.date_maturity,l.date) >= %s)\
-                    AND ((l.partner_id IN %s) OR (l.partner_id IS NULL))
-                AND (l.date <= %s)
-                AND l.company_id IN %s'''
-        cr.execute(query, (tuple(move_state), tuple(account_type), date_from,
-                           tuple(partner_ids), date_from, tuple(company_ids)))
-        aml_ids = cr.fetchall()
-        aml_ids = aml_ids and [x[0] for x in aml_ids] or []
-        for line in self.env['account.move.line'].browse(aml_ids):
-            partner_id = line.partner_id.id or False
-            if partner_id not in undue_amounts:
-                undue_amounts[partner_id] = 0.0
-            line_amount = line.company_id.currency_id._convert(line.balance,
-                                                               user_currency,
-                                                               company, date)
-            if user_currency.is_zero(line_amount):
-                continue
-            for partial_line in line.matched_debit_ids:
-                if partial_line.max_date <= date_from:
-                    line_currency = partial_line.company_id.currency_id
-                    line_amount += line_currency._convert(partial_line.amount,
-                                                          user_currency,
-                                                          company, date)
-            for partial_line in line.matched_credit_ids:
-                if partial_line.max_date <= date_from:
-                    line_currency = partial_line.company_id.currency_id
-                    line_amount -= line_currency._convert(partial_line.amount,
-                                                          user_currency,
-                                                          company, date)
-            if not self.env.user.company_id.currency_id.is_zero(line_amount):
-                undue_amounts[partner_id] += line_amount
-                lines[partner_id].append({
-                    'line': line,
-                    'amount': line_amount,
-                    'period': 6,
-                })
+        
+        # Process undue amounts in batches
+        for partner_batch in partner_batches:
+            query = '''SELECT l.id
+                    FROM account_move_line AS l, account_account, account_move am
+                    WHERE (l.account_id = account_account.id) AND (l.move_id = am.id)
+                        AND (am.state IN %s)
+                        AND (account_account.account_type IN %s)
+                        AND (COALESCE(l.date_maturity,l.date) >= %s)
+                        AND ((l.partner_id IN %s) OR (l.partner_id IS NULL))
+                    AND (l.date <= %s)
+                    AND l.company_id IN %s
+                    LIMIT 50000'''  # Limit to avoid memory issues
+            cr.execute(query, (tuple(move_state), tuple(account_type), date_from,
+                             tuple(partner_batch), date_from, tuple(company_ids)))
+            aml_ids = cr.fetchall()
+            aml_ids = aml_ids and [x[0] for x in aml_ids] or []
+            
+            # Process move lines in smaller batches to avoid memory issues
+            LINE_BATCH_SIZE = 5000
+            for i in range(0, len(aml_ids), LINE_BATCH_SIZE):
+                batch_ids = aml_ids[i:i + LINE_BATCH_SIZE]
+                for line in self.env['account.move.line'].browse(batch_ids):
+                    partner_id = line.partner_id.id or False
+                    if partner_id not in undue_amounts:
+                        undue_amounts[partner_id] = 0.0
+                        
+                    line_amount = line.company_id.currency_id._convert(line.balance,
+                                                                     user_currency,
+                                                                     company, date)
+                    if user_currency.is_zero(line_amount):
+                        continue
+                        
+                    for partial_line in line.matched_debit_ids:
+                        if partial_line.max_date <= date_from:
+                            line_currency = partial_line.company_id.currency_id
+                            line_amount += line_currency._convert(partial_line.amount,
+                                                                user_currency,
+                                                                company, date)
+                    for partial_line in line.matched_credit_ids:
+                        if partial_line.max_date <= date_from:
+                            line_currency = partial_line.company_id.currency_id
+                            line_amount -= line_currency._convert(partial_line.amount,
+                                                                user_currency,
+                                                                company, date)
+                    if not self.env.user.company_id.currency_id.is_zero(line_amount):
+                        undue_amounts[partner_id] += line_amount
+                        lines[partner_id].append({
+                            'line': line,
+                            'amount': line_amount,
+                            'period': 6,
+                        })
+                
+                # Force garbage collection after each batch
+                gc.collect()
 
         # Use one query per period and store results in history (a list variable)
         # Each history will contain: history[1] = {'<partner_id>': <partner_debit-credit>}
