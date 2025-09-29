@@ -8,8 +8,35 @@ from datetime import datetime
 
 class ReportGeneralLedger(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.report_general_ledger'
-    _inherit = ['account.report.memory.mixin']
     _description = 'General Ledger Report'
+
+    def _start_memory_monitoring(self):
+        """Start memory monitoring - optional implementation"""
+        try:
+            memory_mixin = self.env['account.report.memory.mixin']
+            if hasattr(memory_mixin, '_start_memory_monitoring'):
+                memory_mixin._start_memory_monitoring()
+        except Exception:
+            pass  # Memory monitoring is optional
+    
+    def _check_memory_usage(self, context_msg="", force_gc=False):
+        """Check memory usage - optional implementation"""
+        try:
+            memory_mixin = self.env['account.report.memory.mixin']
+            if hasattr(memory_mixin, '_check_memory_usage'):
+                return memory_mixin._check_memory_usage(context_msg, force_gc)
+        except Exception:
+            pass  # Memory monitoring is optional
+        return 0
+    
+    def _log_memory_summary(self):
+        """Log memory summary - optional implementation"""
+        try:
+            memory_mixin = self.env['account.report.memory.mixin']
+            if hasattr(memory_mixin, '_log_memory_summary'):
+                memory_mixin._log_memory_summary()
+        except Exception:
+            pass  # Memory monitoring is optional
 
     def _get_account_move_entry(self, accounts, analytic_account_ids,
                                 partner_ids, init_balance,
