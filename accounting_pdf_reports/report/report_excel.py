@@ -77,6 +77,10 @@ class GeneralLedgerXlsx(models.AbstractModel):
         worksheet.write(row, 2, f'Date To: {date_to}', text_format)
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
         row += 2
+
+        def create_xlsx_report(self, workbook, data, partners):
+            # Odoo expects this method name for xlsx export
+            return self.generate_xlsx_report(workbook, data, partners)
         
         # Process accounts
         accounts = report_data.get('Accounts', [])
@@ -199,6 +203,10 @@ class PartnerLedgerXlsx(models.AbstractModel):
         worksheet.write(row, 2, f'Date To: {date_to}', text_format)
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
         row += 2
+
+        def create_xlsx_report(self, workbook, data, partners):
+            # Odoo expects this method name for xlsx export
+            return self.generate_xlsx_report(workbook, data, partners)
         
         # Process partners
         partners = report_data.get('docs', [])
@@ -352,3 +360,7 @@ class TrialBalanceXlsx(models.AbstractModel):
         worksheet.write(row, 2, total_debit, total_format)
         worksheet.write(row, 3, total_credit, total_format)
         worksheet.write(row, 4, total_balance, total_format)
+
+        def create_xlsx_report(self, workbook, data, partners):
+            # Odoo expects this method name for xlsx export
+            return self.generate_xlsx_report(workbook, data, partners)
