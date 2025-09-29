@@ -1,5 +1,6 @@
 from odoo import api, fields, models, _
 from odoo.tools.misc import get_lang
+from odoo.exceptions import UserError
 
 
 class AccountCommonReport(models.TransientModel):
@@ -60,7 +61,7 @@ class AccountCommonReport(models.TransientModel):
         return result
 
     def _print_report(self, data):
-        raise NotImplementedError()
+        raise UserError('Not implemented for this report type')
 
     def check_report(self):
         self.ensure_one()
@@ -75,7 +76,7 @@ class AccountCommonReport(models.TransientModel):
 
     def _print_excel_report(self, data):
         """Base method for Excel export - should be overridden by subclasses"""
-        raise NotImplementedError("Excel export not implemented for this report type")
+        raise UserError("Excel export not implemented for this report type")
 
     def print_excel_report(self):
         """Generic Excel export method for all reports"""
