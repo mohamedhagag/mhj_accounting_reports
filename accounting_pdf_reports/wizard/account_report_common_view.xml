@@ -17,8 +17,8 @@
             </group>
             <group string="Performance Options" col="4">
                 <field name="enable_pagination"/>
-                <field name="max_records_per_account" attrs="{'invisible': [('enable_pagination', '=', False)]}"/>
-                <field name="batch_size" attrs="{'invisible': [('enable_pagination', '=', False)]}"/>
+                <field name="max_records_per_account" invisible="not enable_pagination"/>
+                <field name="batch_size" invisible="not enable_pagination"/>
             </group>
             <footer>
                 <button name="check_report" string="Print" type="object" default_focus="1" class="oe_highlight" data-hotkey="q"/>
