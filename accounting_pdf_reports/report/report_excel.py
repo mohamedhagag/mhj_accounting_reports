@@ -2,7 +2,7 @@ from odoo import api, models, _
 from odoo.exceptions import UserError
 
 try:
-    from odoo.addons.report_xlsx.report.report_xlsx import ReportXlsx
+    from odoo.addons.report_xlsx.report.report_abstract_xlsx import ReportXlsxAbstract
     XLSX_AVAILABLE = True
 except ImportError:
     ReportXlsx = object
