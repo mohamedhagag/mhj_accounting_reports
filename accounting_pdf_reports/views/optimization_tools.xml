@@ -60,17 +60,17 @@
         </field>
     </record>
 
+    <!-- Main Optimization Menu -->
+    <menuitem id="menu_reports_optimization"
+              name="Performance Tools"
+              parent="account.menu_finance_reports"
+              sequence="100"/>
+              
     <!-- Menu for Optimization Tools -->
     <menuitem id="menu_account_report_optimization"
               name="Report Optimization"
               parent="accounting_pdf_reports.menu_reports_optimization"
               action="action_account_report_optimization"
               sequence="10"/>
-              
-    <!-- Main Optimization Menu -->
-    <menuitem id="menu_reports_optimization"
-              name="Performance Tools"
-              parent="accounting_pdf_reports.reports_main_menu"
-              sequence="100"/>
 
 </odoo>
