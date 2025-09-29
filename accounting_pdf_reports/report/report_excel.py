@@ -129,10 +129,6 @@ class GeneralLedgerXlsx(models.AbstractModel):
             worksheet.write(row, 7, account_debit - account_credit, total_format)
             row += 2
 
-    def create_xlsx_report(self, workbook, data, partners):
-        # Odoo expects this method name for xlsx export
-        return self.generate_xlsx_report(workbook, data, partners)
-
 
 class PartnerLedgerXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.partner_ledger_xlsx'
@@ -256,10 +252,6 @@ class PartnerLedgerXlsx(models.AbstractModel):
             worksheet.write(row, 7, partner_debit - partner_credit, total_format)
             row += 2
 
-    def create_xlsx_report(self, workbook, data, partners):
-        # Odoo expects this method name for xlsx export
-        return self.generate_xlsx_report(workbook, data, partners)
-
 
 class TrialBalanceXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.trial_balance_xlsx'
@@ -361,6 +353,3 @@ class TrialBalanceXlsx(models.AbstractModel):
         worksheet.write(row, 3, total_credit, total_format)
         worksheet.write(row, 4, total_balance, total_format)
 
-    def create_xlsx_report(self, workbook, data, partners):
-        # Odoo expects this method name for xlsx export
-        return self.generate_xlsx_report(workbook, data, partners)
