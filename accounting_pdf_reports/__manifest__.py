@@ -45,5 +45,6 @@
         'python': ['psutil', 'xlsxwriter'],
     },
     'pre_init_hook': '_pre_init_clean_m2m_models',
+    'post_init_hook': '_post_init_hook',
     'images': ['static/description/banner.gif'],
 }

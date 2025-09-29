@@ -7,13 +7,23 @@ class AccountFinancialReport(models.Model):
 
     @api.depends('parent_id', 'parent_id.level')
     def _get_level(self):
-        '''Returns a dictionary with key=the ID of a record and value = the level of this
-           record in the tree structure.'''
+        '''Efficiently compute hierarchy levels for all records in one pass'''
+        # Build parent-child mapping for efficient traversal
+        reports_by_parent = {}
+        all_reports = {report.id: report for report in self}
+        
         for report in self:
-            level = 0
-            if report.parent_id:
-                level = report.parent_id.level + 1
-            report.level = level
+            parent_id = report.parent_id.id if report.parent_id else False
+            reports_by_parent.setdefault(parent_id, []).append(report)
+        
+        def compute_levels(parent_id, level):
+            """Recursively compute levels for all children"""
+            for report in reports_by_parent.get(parent_id, []):
+                report.level = level
+                compute_levels(report.id, level + 1)
+        
+        # Start from root level (no parent)
+        compute_levels(False, 0)
 
     def _get_children_by_order(self):
         res = self
@@ -27,7 +37,7 @@ class AccountFinancialReport(models.Model):
     parent_id = fields.Many2one('account.financial.report', 'Parent')
     children_ids = fields.One2many('account.financial.report', 'parent_id', 'Account Report')
     sequence = fields.Integer('Sequence')
-    level = fields.Integer(compute='_get_level', string='Level', store=True, recursive=True)
+    level = fields.Integer(compute='_get_level', string='Level', recursive=True)
     type = fields.Selection([
         ('sum', 'View'),
         ('accounts', 'Accounts'),
