@@ -11,12 +11,19 @@ except ImportError:
 
 class GeneralLedgerXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.general_ledger_xlsx'
-    _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     _description = 'General Ledger XLSX Report'
+    
+    @api.model
+    def _auto_init(self):
+        # Dynamically set inheritance if report_xlsx is available
+        if XLSX_AVAILABLE and 'report.report_xlsx.abstract' not in self._inherit:
+            self._inherit = ['report.report_xlsx.abstract']
+        return super()._auto_init()
 
     def generate_xlsx_report(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
-            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed."))
+            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
+                            "Please install the 'report_xlsx' module and restart Odoo."))
             
         # Get report data using the existing report model
         report_obj = self.env['report.accounting_pdf_reports.report_general_ledger']
@@ -125,12 +132,19 @@ class GeneralLedgerXlsx(models.AbstractModel):
 
 class PartnerLedgerXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.partner_ledger_xlsx'
-    _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     _description = 'Partner Ledger XLSX Report'
+    
+    @api.model
+    def _auto_init(self):
+        # Dynamically set inheritance if report_xlsx is available
+        if XLSX_AVAILABLE and 'report.report_xlsx.abstract' not in self._inherit:
+            self._inherit = ['report.report_xlsx.abstract']
+        return super()._auto_init()
 
     def generate_xlsx_report(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
-            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed."))
+            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
+                            "Please install the 'report_xlsx' module and restart Odoo."))
             
         # Get report data using the existing report model
         report_obj = self.env['report.accounting_pdf_reports.report_partnerledger']
@@ -241,12 +255,19 @@ class PartnerLedgerXlsx(models.AbstractModel):
 
 class TrialBalanceXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.trial_balance_xlsx'
-    _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
     _description = 'Trial Balance XLSX Report'
+    
+    @api.model
+    def _auto_init(self):
+        # Dynamically set inheritance if report_xlsx is available
+        if XLSX_AVAILABLE and 'report.report_xlsx.abstract' not in self._inherit:
+            self._inherit = ['report.report_xlsx.abstract']
+        return super()._auto_init()
 
     def generate_xlsx_report(self, workbook, data, partners):
         if not XLSX_AVAILABLE:
-            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed."))
+            raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
+                            "Please install the 'report_xlsx' module and restart Odoo."))
             
         # Get report data using the existing report model
         report_obj = self.env['report.accounting_pdf_reports.report_trialbalance']

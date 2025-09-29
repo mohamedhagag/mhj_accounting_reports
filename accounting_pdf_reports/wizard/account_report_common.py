@@ -72,3 +72,33 @@ class AccountCommonReport(models.TransientModel):
         used_context = self._build_contexts(data)
         data['form']['used_context'] = dict(used_context, lang=get_lang(self.env).code)
         return self.with_context(discard_logo_check=True)._print_report(data)
+
+    def _print_excel_report(self, data):
+        """Base method for Excel export - should be overridden by subclasses"""
+        raise NotImplementedError("Excel export not implemented for this report type")
+
+    def print_excel_report(self):
+        """Generic Excel export method for all reports"""
+        self.ensure_one()
+        data = {}
+        data['ids'] = self.env.context.get('active_ids', [])
+        data['model'] = self.env.context.get('active_model', 'ir.ui.menu')
+        
+        # Get all fields from the current model
+        all_fields = []
+        for field_name, field in self._fields.items():
+            if not field.compute and field_name not in ['id', 'create_date', 'create_uid', 'write_date', 'write_uid', '__last_update']:
+                all_fields.append(field_name)
+        
+        # Read all available fields
+        try:
+            data['form'] = self.read(all_fields)[0]
+        except Exception:
+            # Fallback to basic fields if reading all fields fails
+            basic_fields = ['date_from', 'date_to', 'journal_ids', 'target_move', 'company_id', 
+                           'enable_pagination', 'max_records_per_account', 'batch_size']
+            data['form'] = self.read(basic_fields)[0]
+        
+        used_context = self._build_contexts(data)
+        data['form']['used_context'] = dict(used_context, lang=get_lang(self.env).code)
+        return self.with_context(discard_logo_check=True)._print_excel_report(data)
