@@ -54,6 +54,16 @@ class GeneralLedgerXlsx(models.AbstractModel):
             'num_format': '#,##0.00', 'border': 1, 'align': 'right'
         })
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
+        
+        # Special format for initial balance lines
+        init_balance_format = workbook.add_format({
+            'bold': True, 'bg_color': '#FFF2CC', 'border': 1,
+            'align': 'left', 'font_color': '#7F6000'
+        })
+        init_number_format = workbook.add_format({
+            'bold': True, 'bg_color': '#FFF2CC', 'border': 1,
+            'num_format': '#,##0.00', 'align': 'right', 'font_color': '#7F6000'
+        })
 
         # Set column widths
         worksheet.set_column('A:A', 12)  # Date
@@ -74,10 +84,13 @@ class GeneralLedgerXlsx(models.AbstractModel):
         date_from = form_data.get('date_from', '')
         date_to = form_data.get('date_to', '')
         target_move = form_data.get('target_move', 'posted')
+        initial_balance = form_data.get('initial_balance', False)
 
         worksheet.write(row, 0, f'Date From: {date_from}', text_format)
         worksheet.write(row, 2, f'Date To: {date_to}', text_format)
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
+        row += 1
+        worksheet.write(row, 0, f'Include Initial Balance: {"Yes" if initial_balance else "No"}', text_format)
         row += 2
 
         # Process accounts
@@ -101,19 +114,27 @@ class GeneralLedgerXlsx(models.AbstractModel):
             account_credit = 0.0
 
             for line in move_lines:
-                worksheet.write(row, 0, line.get('ldate', ''), date_format)
-                worksheet.write(row, 1, line.get('lcode', ''), text_format)
-                worksheet.write(row, 2, line.get('partner_name', ''), text_format)
-                worksheet.write(row, 3, line.get('move_name', ''), text_format)
-                worksheet.write(row, 4, line.get('lname', ''), text_format)
+                # Check if this is an initial balance line
+                is_initial_balance = line.get('lname', '') == 'Initial Balance'
+                
+                # Use special formatting for initial balance lines
+                line_text_format = init_balance_format if is_initial_balance else text_format
+                line_number_format = init_number_format if is_initial_balance else number_format
+                line_date_format = init_balance_format if is_initial_balance else date_format
+                
+                worksheet.write(row, 0, line.get('ldate', ''), line_date_format)
+                worksheet.write(row, 1, line.get('lcode', ''), line_text_format)
+                worksheet.write(row, 2, line.get('partner_name', ''), line_text_format)
+                worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
+                worksheet.write(row, 4, line.get('lname', ''), line_text_format)
 
                 debit = line.get('debit', 0.0)
                 credit = line.get('credit', 0.0)
                 balance = line.get('balance', 0.0)
 
-                worksheet.write(row, 5, debit, number_format)
-                worksheet.write(row, 6, credit, number_format)
-                worksheet.write(row, 7, balance, number_format)
+                worksheet.write(row, 5, debit, line_number_format)
+                worksheet.write(row, 6, credit, line_number_format)
+                worksheet.write(row, 7, balance, line_number_format)
 
                 account_debit += debit
                 account_credit += credit
@@ -177,6 +198,16 @@ class PartnerLedgerXlsx(models.AbstractModel):
             'num_format': '#,##0.00', 'border': 1, 'align': 'right'
         })
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
+        
+        # Special format for initial balance lines
+        init_balance_format = workbook.add_format({
+            'bold': True, 'bg_color': '#FFF2CC', 'border': 1,
+            'align': 'left', 'font_color': '#7F6000'
+        })
+        init_number_format = workbook.add_format({
+            'bold': True, 'bg_color': '#FFF2CC', 'border': 1,
+            'num_format': '#,##0.00', 'align': 'right', 'font_color': '#7F6000'
+        })
 
         # Set column widths
         worksheet.set_column('A:A', 12)  # Date
@@ -198,10 +229,13 @@ class PartnerLedgerXlsx(models.AbstractModel):
         date_from = form_data.get('date_from', '')
         date_to = form_data.get('date_to', '')
         target_move = form_data.get('target_move', 'posted')
+        initial_balance = form_data.get('initial_balance', False)
 
         worksheet.write(row, 0, f'Date From: {date_from}', text_format)
         worksheet.write(row, 2, f'Date To: {date_to}', text_format)
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
+        row += 1
+        worksheet.write(row, 0, f'Include Initial Balance: {"Yes" if initial_balance else "No"}', text_format)
         row += 2
 
         # Process partners
@@ -227,21 +261,29 @@ class PartnerLedgerXlsx(models.AbstractModel):
             partner_credit = sum_func(report_data.get('data'), partner, 'credit')
 
             for line in partner_lines:
-                worksheet.write(row, 0, line.get('date', ''), date_format)
-                worksheet.write(row, 1, line.get('code', ''), text_format)
-                worksheet.write(row, 2, line.get('a_name', ''), text_format)
-                worksheet.write(row, 3, line.get('move_name', ''), text_format)
-                worksheet.write(row, 4, line.get('displayed_name', ''), text_format)
+                # Check if this is an initial balance line
+                is_initial_balance = line.get('name', '') == 'Initial Balance' or line.get('displayed_name', '') == 'Initial Balance'
+                
+                # Use special formatting for initial balance lines
+                line_text_format = init_balance_format if is_initial_balance else text_format
+                line_number_format = init_number_format if is_initial_balance else number_format
+                line_date_format = init_balance_format if is_initial_balance else date_format
+                
+                worksheet.write(row, 0, line.get('date', ''), line_date_format)
+                worksheet.write(row, 1, line.get('code', ''), line_text_format)
+                worksheet.write(row, 2, line.get('a_name', ''), line_text_format)
+                worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
+                worksheet.write(row, 4, line.get('displayed_name', ''), line_text_format)
 
                 debit = line.get('debit', 0.0)
                 credit = line.get('credit', 0.0)
                 balance = line.get('progress', 0.0)
                 currency = line.get('currency_code', '')
 
-                worksheet.write(row, 5, debit, number_format)
-                worksheet.write(row, 6, credit, number_format)
-                worksheet.write(row, 7, balance, number_format)
-                worksheet.write(row, 8, currency, text_format)
+                worksheet.write(row, 5, debit, line_number_format)
+                worksheet.write(row, 6, credit, line_number_format)
+                worksheet.write(row, 7, balance, line_number_format)
+                worksheet.write(row, 8, currency, line_text_format)
                 row += 1
 
             # Partner totals
