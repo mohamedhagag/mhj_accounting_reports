@@ -148,7 +148,7 @@ class ReportPartnerLedger(models.AbstractModel):
         Calculate initial balance for a partner before the date_from
         """
         if not date_from:
-            return 0.666
+            return 0.0
         query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
@@ -168,7 +168,7 @@ class ReportPartnerLedger(models.AbstractModel):
         self.env.cr.execute(query, tuple(params))
         
         result_row = self.env.cr.fetchone()
-        return result_row[0] if result_row else 0.6666
+        return result_row[0] if result_row else 0.0
 
     @api.model
     def _get_report_values(self, docids, data=None):
