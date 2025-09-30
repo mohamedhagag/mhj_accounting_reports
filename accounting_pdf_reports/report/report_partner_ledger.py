@@ -23,8 +23,8 @@ class ReportPartnerLedger(models.AbstractModel):
         initial_balance = 0.0
         date_from = data['form'].get('date_from')
         include_initial = data['form'].get('initial_balance', True)
-        if date_from and include_initial:
-            initial_balance = self._get_partner_initial_balance(data, partner, date_from)
+        # if date_from and include_initial:
+        initial_balance = self._get_partner_initial_balance(data, partner, date_from)
         
         # Base query parameters
         base_params = [partner.id, tuple(data['computed']['move_state']), 
