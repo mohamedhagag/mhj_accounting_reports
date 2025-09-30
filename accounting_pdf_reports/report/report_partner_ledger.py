@@ -16,7 +16,7 @@ class ReportPartnerLedger(models.AbstractModel):
         BATCH_SIZE = 10000  # Process in batches to avoid memory issues
         
         currency = self.env['res.currency']
-        query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
+        query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
         # Get initial balance if date_from is set and initial_balance is requested
@@ -95,7 +95,7 @@ class ReportPartnerLedger(models.AbstractModel):
                     r[field_name] for field_name in ('move_name', 'ref', 'name')
                     if r[field_name] not in (None, '', '/')
                 )
-                running_sum += r['debit'] - r['credit']
+                running_sum += r['debit'] - r['credit'] + initial_balance
                 r['progress'] = running_sum
                 r['currency_id'] = currency.browse(r.get('currency_id'))
                 full_account.append(r)
@@ -120,7 +120,7 @@ class ReportPartnerLedger(models.AbstractModel):
             return 0.0
             
         result = 0.0
-        query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
+        query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
         params = [partner.id, tuple(data['computed']['move_state']), 
@@ -140,6 +140,18 @@ class ReportPartnerLedger(models.AbstractModel):
         result_row = self.env.cr.fetchone()
         if result_row:
             result = result_row[0] or 0.0
+        
+        # Add initial balance to the sum if requested and date_from is set
+        date_from = data['form'].get('date_from')
+        include_initial = data['form'].get('initial_balance', True)
+        # if date_from and include_initial:
+        initial_balance = self._get_partner_initial_balance(data, partner, date_from)
+        if field == 'debit':
+            result += initial_balance if initial_balance > 0 else 0.0
+        elif field == 'credit':
+            result += -initial_balance if initial_balance < 0 else 0.0
+        elif field == 'debit - credit':
+            result += initial_balance
             
         return result
 
@@ -177,7 +189,7 @@ class ReportPartnerLedger(models.AbstractModel):
         data['computed'] = {}
 
         obj_partner = self.env['res.partner']
-        query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
+        query_get_data = self.env['account.move.line']._query_get()
         data['computed']['move_state'] = ['draft', 'posted']
         if data['form'].get('target_move', 'all') == 'posted':
             data['computed']['move_state'] = ['posted']
