@@ -90,14 +90,20 @@ class ReportGeneralLedger(models.AbstractModel):
     
     def _get_initial_balances(self, accounts, analytic_account_ids, partner_ids, move_lines):
         """
-        Get initial balances with optimized SQL
+        Get initial balances with optimized SQL - calculates balance before date_from
         """
         cr = self.env.cr
         MoveLine = self.env['account.move.line']
         
+        # Only calculate initial balance if there's a start date
+        date_from = self.env.context.get('date_from')
+        if not date_from:
+            return
+        
         context = dict(self.env.context)
-        context['date_from'] = self.env.context.get('date_from')
-        context['date_to'] = False
+        # Set date_to to day before date_from to get balance up to that point
+        context['date_to'] = date_from
+        context['date_from'] = False  # Get all entries before date_from
         context['initial_bal'] = True
         
         if analytic_account_ids:
@@ -112,14 +118,18 @@ class ReportGeneralLedger(models.AbstractModel):
         init_filters = " AND ".join(init_wheres)
         filters = init_filters.replace('account_move_line__move_id', 'm').replace('account_move_line', 'l')
         
-        # Optimized initial balance query with proper indexing hints
-        sql = """SELECT 0 AS lid, l.account_id AS account_id, '' AS ldate,
+        # Optimized initial balance query - only show accounts with non-zero balances
+        sql = """SELECT 0 AS lid, l.account_id AS account_id, %s AS ldate,
             '' AS lcode, 0.0 AS amount_currency, '' AS analytic_account_id, 
             '' AS lref, 'Initial Balance' AS lname, 
-            COALESCE(SUM(l.debit),0.0) AS debit, 
-            COALESCE(SUM(l.credit),0.0) AS credit, 
-            COALESCE(SUM(l.debit),0) - COALESCE(SUM(l.credit), 0) as balance, 
-            '' AS lpartner_id, '' AS move_name, '' AS move_id, '' AS currency_code,
+            CASE WHEN COALESCE(SUM(l.debit - l.credit),0) > 0 
+                 THEN COALESCE(SUM(l.debit - l.credit),0) 
+                 ELSE 0.0 END AS debit,
+            CASE WHEN COALESCE(SUM(l.debit - l.credit),0) < 0 
+                 THEN ABS(COALESCE(SUM(l.debit - l.credit),0)) 
+                 ELSE 0.0 END AS credit,
+            COALESCE(SUM(l.debit - l.credit), 0) as balance, 
+            '' AS lpartner_id, 'Initial Balance' AS move_name, '' AS move_id, '' AS currency_code,
             NULL AS currency_id, '' AS invoice_id, '' AS invoice_type, 
             '' AS invoice_number, '' AS partner_name
             FROM account_move_line l
@@ -127,9 +137,11 @@ class ReportGeneralLedger(models.AbstractModel):
             LEFT JOIN res_currency c ON (l.currency_id=c.id)
             LEFT JOIN res_partner p ON (l.partner_id=p.id)
             JOIN account_journal j ON (l.journal_id=j.id)
-            WHERE l.account_id IN %s""" + filters + ' GROUP BY l.account_id'
+            WHERE l.account_id IN %s AND l.date < %s """ + filters + """
+            GROUP BY l.account_id 
+            HAVING COALESCE(SUM(l.debit - l.credit), 0) != 0"""
             
-        params = (tuple(accounts.ids),) + tuple(init_where_params)
+        params = (date_from, tuple(accounts.ids), date_from) + tuple(init_where_params)
         cr.execute(sql, params)
         
         for row in cr.dictfetchall():

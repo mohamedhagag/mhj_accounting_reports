@@ -11,13 +11,20 @@ class ReportPartnerLedger(models.AbstractModel):
     def _lines(self, data, partner):
         """
         Optimized version for handling millions of journal items per partner.
-        Uses pagination to avoid memory issues.
+        Uses pagination to avoid memory issues and includes initial balance.
         """
         BATCH_SIZE = 10000  # Process in batches to avoid memory issues
         
         currency = self.env['res.currency']
         query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
+        
+        # Get initial balance if date_from is set and initial_balance is requested
+        initial_balance = 0.0
+        date_from = data['form'].get('used_context', {}).get('date_from')
+        include_initial = data['form'].get('initial_balance', True)
+        if date_from and include_initial:
+            initial_balance = self._get_partner_initial_balance(data, partner, date_from)
         
         # Base query parameters
         base_params = [partner.id, tuple(data['computed']['move_state']), 
@@ -43,7 +50,27 @@ class ReportPartnerLedger(models.AbstractModel):
         
         full_account = []
         offset = 0
-        running_sum = 0.0
+        running_sum = initial_balance  # Start with initial balance
+        
+        # Add initial balance line if there's a balance and date_from is set and initial balance is requested
+        if initial_balance != 0.0 and date_from and include_initial:
+            initial_line = {
+                'id': 0,
+                'date': date_from,
+                'code': '',
+                'a_name': '',
+                'ref': 'Initial Balance',
+                'move_name': 'Initial Balance',
+                'name': 'Initial Balance',
+                'debit': initial_balance if initial_balance > 0 else 0.0,
+                'credit': -initial_balance if initial_balance < 0 else 0.0,
+                'amount_currency': 0.0,
+                'currency_id': None,
+                'currency_code': '',
+                'displayed_name': 'Initial Balance',
+                'progress': initial_balance
+            }
+            full_account.append(initial_line)
         
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
@@ -115,6 +142,31 @@ class ReportPartnerLedger(models.AbstractModel):
             result = result_row[0] or 0.0
             
         return result
+
+    def _get_partner_initial_balance(self, data, partner, date_from):
+        """
+        Calculate initial balance for a partner before the date_from
+        """
+        query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
+        reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
+        
+        # Query to get balance before date_from
+        params = [partner.id, tuple(data['computed']['move_state']), 
+                 tuple(data['computed']['account_ids']), date_from] + query_get_data[2]
+        
+        query = """SELECT COALESCE(SUM("account_move_line".debit - "account_move_line".credit), 0.0)
+                FROM """ + query_get_data[0] + """
+                JOIN account_move AS m ON (m.id = "account_move_line".move_id)
+                WHERE "account_move_line".partner_id = %s
+                    AND m.state IN %s
+                    AND "account_move_line".account_id IN %s
+                    AND "account_move_line".date < %s
+                    AND """ + query_get_data[1] + reconcile_clause
+                    
+        self.env.cr.execute(query, tuple(params))
+        
+        result_row = self.env.cr.fetchone()
+        return result_row[0] if result_row else 0.0
 
     @api.model
     def _get_report_values(self, docids, data=None):
