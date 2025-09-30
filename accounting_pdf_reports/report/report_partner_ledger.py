@@ -128,48 +128,28 @@ class ReportPartnerLedger(models.AbstractModel):
         """
         if field not in ['debit', 'credit', 'debit - credit']:
             return 0.0
-        
-        if not partner or not data.get('computed', {}).get('account_ids'):
-            return 0.0
             
         result = 0.0
-        try:
-            query_get_data = self.env['account.move.line']._query_get()
-            reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
+        query_get_data = self.env['account.move.line']._query_get()
+        reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
-            params = [partner.id, tuple(data['computed']['move_state']), 
-                     tuple(data['computed']['account_ids'])] + query_get_data[2]
-            
-            # Optimized query with proper JOIN structure for better performance
-            query = """SELECT COALESCE(SUM(""" + field + """), 0.0)
-                    FROM """ + query_get_data[0] + """
-                    JOIN account_move AS m ON (m.id = "account_move_line".move_id)
-                    WHERE "account_move_line".partner_id = %s
-                        AND m.state IN %s
-                        AND "account_move_line".account_id IN %s
-                        AND """ + query_get_data[1] + reconcile_clause
-                        
-            self.env.cr.execute(query, tuple(params))
-            
-            result_row = self.env.cr.fetchone()
-            if result_row:
-                result = float(result_row[0] or 0.0)
-            
-            # Add initial balance to the sum if requested and date_from is set
-            date_from = data['form'].get('date_from')
-            include_initial = data['form'].get('initial_balance', True)
-            if date_from and include_initial:
-                initial_data = self._get_partner_initial_balance(data, partner, date_from)
-                if initial_data:
-                    if field == 'debit':
-                        result += initial_data['debit']
-                    elif field == 'credit':
-                        result += initial_data['credit']
-                    elif field == 'debit - credit':
-                        result += initial_data['balance']
-                        
-        except Exception as e:
-            _logger.warning("Error calculating sum for partner %s, field %s: %s", partner.id, field, str(e))
+        params = [partner.id, tuple(data['computed']['move_state']), 
+                 tuple(data['computed']['account_ids'])] + query_get_data[2]
+        
+        # Optimized query with proper JOIN structure for better performance
+        query = """SELECT COALESCE(SUM(""" + field + """), 0.0)
+                FROM """ + query_get_data[0] + """
+                JOIN account_move AS m ON (m.id = "account_move_line".move_id)
+                WHERE "account_move_line".partner_id = %s
+                    AND m.state IN %s
+                    AND "account_move_line".account_id IN %s
+                    AND """ + query_get_data[1] + reconcile_clause
+                    
+        self.env.cr.execute(query, tuple(params))
+        
+        result_row = self.env.cr.fetchone()
+        if result_row:
+            result = result_row[0] or 0.0
             
         return result
 
