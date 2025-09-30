@@ -132,7 +132,9 @@ class ReportPartnerLedger(models.AbstractModel):
             
         result = 0.0
         AML = self.env['account.move.line']
-        query_get_data = AML.with_context(data['form'].get('used_context', {}))._query_get()
+        ctx = data['form'].get('used_context', {})
+        ctx['date_to'] = None  # Avoid date filtering for sum
+        query_get_data = AML.with_context(ctx)._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
         params = [partner.id, tuple(data['computed']['move_state']), 
