@@ -141,16 +141,16 @@ class ReportPartnerLedger(models.AbstractModel):
             result = result_row[0] or 0.0
         
         # Add initial balance to the sum if requested and date_from is set
-        date_from = data['form'].get('date_from')
-        include_initial = data['form'].get('initial_balance', True)
-        if date_from and include_initial:
-            initial_data = self._get_partner_initial_balance(data, partner, date_from)
-            if field == 'debit':
-                result += initial_data['debit']
-            elif field == 'credit':
-                result += initial_data['credit']
-            elif field == 'debit - credit':
-                result += initial_data['balance']
+        # date_from = data['form'].get('date_from')
+        # include_initial = data['form'].get('initial_balance', True)
+        # if date_from and include_initial:
+        #     initial_data = self._get_partner_initial_balance(data, partner, date_from)
+        #     if field == 'debit':
+        #         result += initial_data['debit']
+        #     elif field == 'credit':
+        #         result += initial_data['credit']
+        #     elif field == 'debit - credit':
+        #         result += initial_data['balance']
             
         return result
 
