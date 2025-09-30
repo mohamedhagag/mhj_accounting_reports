@@ -51,25 +51,25 @@ class ReportPartnerLedger(models.AbstractModel):
         offset = 0
         running_sum = initial_balance  # Start with initial balance
 
-        # Add initial balance line
-        # if (initial_data['debit'] != 0.0 or initial_data['credit'] != 0.0):
-        initial_line = {
-            'id': 0,
-            'date': date_from,
-            'code': '',
-            'a_name': '',
-            'ref': 'Initial Balance',
-            'move_name': 'Initial Balance',
-            'name': 'Initial Balance',
-            'debit': initial_data['debit'],
-            'credit': initial_data['credit'],
-            'amount_currency': 0.0,
-            'currency_id': None,
-            'currency_code': '',
-            'displayed_name': 'Initial Balance',
-            'progress': initial_balance
-        }
-        full_account.append(initial_line)
+        # Add initial balance line when there's a balance and initial_balance is enabled
+        if (initial_data['debit'] != 0.0 or initial_data['credit'] != 0.0) and date_from and include_initial:
+            initial_line = {
+                'id': 0,
+                'date': date_from,
+                'code': '',
+                'a_name': '',
+                'ref': 'Initial Balance',
+                'move_name': 'Initial Balance',
+                'name': 'Initial Balance',
+                'debit': initial_data['debit'],
+                'credit': initial_data['credit'],
+                'amount_currency': 0.0,
+                'currency_id': None,
+                'currency_code': '',
+                'displayed_name': 'Initial Balance',
+                'progress': initial_balance
+            }
+            full_account.append(initial_line)
         
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
@@ -141,16 +141,16 @@ class ReportPartnerLedger(models.AbstractModel):
             result = result_row[0] or 0.0
         
         # Add initial balance to the sum if requested and date_from is set
-        # date_from = data['form'].get('date_from')
-        # include_initial = data['form'].get('initial_balance', True)
-        # if date_from and include_initial:
-        #     initial_data = self._get_partner_initial_balance(data, partner, date_from)
-        #     if field == 'debit':
-        #         result += initial_data['debit']
-        #     elif field == 'credit':
-        #         result += initial_data['credit']
-        #     elif field == 'debit - credit':
-        #         result += initial_data['balance']
+        date_from = data['form'].get('date_from')
+        include_initial = data['form'].get('initial_balance', True)
+        if date_from and include_initial:
+            initial_data = self._get_partner_initial_balance(data, partner, date_from)
+            if field == 'debit':
+                result += initial_data['debit']
+            elif field == 'credit':
+                result += initial_data['credit']
+            elif field == 'debit - credit':
+                result += initial_data['balance']
             
         return result
 
