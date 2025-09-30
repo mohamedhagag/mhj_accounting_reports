@@ -68,23 +68,25 @@
                                 </tr>
                                 <t t-if="data['form']['initial_balance'] and data['form']['date_from']">
                                     <t t-set='initial_balance' t-value="get_partner_initial_balance(data, o, data['form']['date_from'])"/>
-                                    <tr style="background-color: #FFF2CC;">
-                                        <td colspan="4">
-                                            <em>Initial Balance </em>
-                                        </td>
-                                        <td class="text-end">
-                                            <em t-esc="initial_balance.get('debit', 0)"
-                                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
-                                        </td>
-                                        <td class="text-end">
-                                            <em t-esc="initial_balance.get('credit', 0)"
-                                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
-                                        </td>
-                                        <td class="text-end">
-                                            <em t-esc="initial_balance.get('balance', 0)"
-                                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
-                                        </td>
-                                    </tr>
+                                    <t t-if="initial_balance and (initial_balance.get('debit', 0) != 0 or initial_balance.get('credit', 0) != 0)">
+                                        <tr style="background-color: #FFF2CC;">
+                                            <td colspan="4">
+                                                <em>Initial Balance </em>
+                                            </td>
+                                            <td class="text-end">
+                                                <em t-esc="initial_balance.get('debit', 0) if initial_balance else 0"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                            </td>
+                                            <td class="text-end">
+                                                <em t-esc="initial_balance.get('credit', 0) if initial_balance else 0"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <em t-esc="initial_balance.get('balance', 0) if initial_balance else 0"
+                                                    t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
+                                            </td>
+                                        </tr>
+                                    </t>
                                 </t>
                                 <tr t-foreach="lines(data, o)" t-as="line">
                                     <td>
