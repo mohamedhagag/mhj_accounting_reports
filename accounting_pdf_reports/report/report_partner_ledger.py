@@ -59,8 +59,8 @@ class ReportPartnerLedger(models.AbstractModel):
             offset = 0
             running_sum = initial_balance  # Start with initial balance
 
-            # Add initial balance line when there's a balance and initial_balance is enabled
-            if initial_data and (initial_data['debit'] != 0.0 or initial_data['credit'] != 0.0) and date_from and include_initial:
+            # Add initial balance line when initial_balance is enabled and date_from is set
+            if include_initial and date_from:
                 initial_line = {
                     'id': 0,
                     'date': date_from,
