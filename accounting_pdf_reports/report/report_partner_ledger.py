@@ -53,24 +53,24 @@ class ReportPartnerLedger(models.AbstractModel):
         running_sum = initial_balance  # Start with initial balance
         
         # Add initial balance line if there's a balance and date_from is set and initial balance is requested
-        if initial_balance != 0.0 and date_from and include_initial:
-            initial_line = {
-                'id': 0,
-                'date': date_from,
-                'code': '',
-                'a_name': '',
-                'ref': 'Initial Balance',
-                'move_name': 'Initial Balance',
-                'name': 'Initial Balance',
-                'debit': initial_balance if initial_balance > 0 else 0.0,
-                'credit': -initial_balance if initial_balance < 0 else 0.0,
-                'amount_currency': 0.0,
-                'currency_id': None,
-                'currency_code': '',
-                'displayed_name': 'Initial Balance',
-                'progress': initial_balance
-            }
-            full_account.append(initial_line)
+        # if initial_balance != 0.0 and date_from and include_initial:
+        initial_line = {
+            'id': 0,
+            'date': date_from,
+            'code': '',
+            'a_name': '',
+            'ref': 'Initial Balance',
+            'move_name': 'Initial Balance',
+            'name': 'Initial Balance',
+            'debit': initial_balance if initial_balance > 0 else 0.0,
+            'credit': -initial_balance if initial_balance < 0 else 0.0,
+            'amount_currency': 0.0,
+            'currency_id': None,
+            'currency_code': '',
+            'displayed_name': 'Initial Balance',
+            'progress': initial_balance
+        }
+        full_account.append(initial_line)
         
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
@@ -147,6 +147,8 @@ class ReportPartnerLedger(models.AbstractModel):
         """
         Calculate initial balance for a partner before the date_from
         """
+        if not date_from:
+            return 0.0
         query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
