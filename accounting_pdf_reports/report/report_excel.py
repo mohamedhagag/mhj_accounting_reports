@@ -242,6 +242,9 @@ class PartnerLedgerXlsx(models.AbstractModel):
         partners = report_data.get('docs', [])
         lines_func = report_data.get('lines')
         sum_func = report_data.get('sum_partner')
+        get_initial_debit = report_data.get('get_partner_initial_debit')
+        get_initial_credit = report_data.get('get_partner_initial_credit')
+        get_initial_balance = report_data.get('get_partner_initial_balance')
 
         for partner in partners:
             # Partner header
@@ -296,7 +299,31 @@ class PartnerLedgerXlsx(models.AbstractModel):
             worksheet.write(row, 5, partner_debit, total_format)
             worksheet.write(row, 6, partner_credit, total_format)
             worksheet.write(row, 7, partner_debit - partner_credit, total_format)
-            row += 2
+            row += 1
+
+            # Initial balance row if enabled
+            if initial_balance and get_initial_debit and get_initial_credit and get_initial_balance:
+                initial_format = workbook.add_format({
+                    'italic': True, 'bg_color': '#FFF2CC', 'border': 1,
+                    'num_format': '#,##0.00', 'align': 'right', 'font_color': '#7F6000'
+                })
+                initial_text_format = workbook.add_format({
+                    'italic': True, 'bg_color': '#FFF2CC', 'border': 1,
+                    'align': 'left', 'font_color': '#7F6000'
+                })
+                
+                initial_debit_val = get_initial_debit(report_data.get('data'), partner)
+                initial_credit_val = get_initial_credit(report_data.get('data'), partner)
+                initial_balance_val = get_initial_balance(report_data.get('data'), partner)
+                
+                if initial_debit_val != 0.0 or initial_credit_val != 0.0:
+                    worksheet.write(row, 4, f'Initial Balance (before {date_from}):', initial_text_format)
+                    worksheet.write(row, 5, initial_debit_val, initial_format)
+                    worksheet.write(row, 6, initial_credit_val, initial_format)
+                    worksheet.write(row, 7, initial_balance_val, initial_format)
+                    row += 1
+            
+            row += 1
 
 
 class TrialBalanceXlsx(models.AbstractModel):

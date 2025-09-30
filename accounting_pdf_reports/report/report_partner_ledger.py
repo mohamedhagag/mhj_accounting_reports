@@ -20,11 +20,10 @@ class ReportPartnerLedger(models.AbstractModel):
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
         # Get initial balance if date_from is set and initial_balance is requested
-        initial_balance = 0.0
         date_from = data['form'].get('date_from')
         include_initial = data['form'].get('initial_balance', True)
-        # if date_from and include_initial:
-        initial_balance = self._get_partner_initial_balance(data, partner, date_from)
+        initial_data = self._get_partner_initial_balance(data, partner, date_from)
+        initial_balance = initial_data['balance']
         
         # Base query parameters
         base_params = [partner.id, tuple(data['computed']['move_state']), 
@@ -51,9 +50,9 @@ class ReportPartnerLedger(models.AbstractModel):
         full_account = []
         offset = 0
         running_sum = initial_balance  # Start with initial balance
-        
-        # Add initial balance line if there's a balance and date_from is set and initial balance is requested
-        # if initial_balance != 0.0 and date_from and include_initial:
+
+        # Add initial balance line
+        # if (initial_data['debit'] != 0.0 or initial_data['credit'] != 0.0):
         initial_line = {
             'id': 0,
             'date': date_from,
@@ -62,8 +61,8 @@ class ReportPartnerLedger(models.AbstractModel):
             'ref': 'Initial Balance',
             'move_name': 'Initial Balance',
             'name': 'Initial Balance',
-            'debit': initial_balance if initial_balance > 0 else 0.0,
-            'credit': -initial_balance if initial_balance < 0 else 0.0,
+            'debit': initial_data['debit'],
+            'credit': initial_data['credit'],
             'amount_currency': 0.0,
             'currency_id': None,
             'currency_code': '',
@@ -95,7 +94,7 @@ class ReportPartnerLedger(models.AbstractModel):
                     r[field_name] for field_name in ('move_name', 'ref', 'name')
                     if r[field_name] not in (None, '', '/')
                 )
-                running_sum += r['debit'] - r['credit'] + initial_balance
+                running_sum += r['debit'] - r['credit']
                 r['progress'] = running_sum
                 r['currency_id'] = currency.browse(r.get('currency_id'))
                 full_account.append(r)
@@ -144,14 +143,14 @@ class ReportPartnerLedger(models.AbstractModel):
         # Add initial balance to the sum if requested and date_from is set
         date_from = data['form'].get('date_from')
         include_initial = data['form'].get('initial_balance', True)
-        # if date_from and include_initial:
-        initial_balance = self._get_partner_initial_balance(data, partner, date_from)
-        if field == 'debit':
-            result += initial_balance if initial_balance > 0 else 0.0
-        elif field == 'credit':
-            result += -initial_balance if initial_balance < 0 else 0.0
-        elif field == 'debit - credit':
-            result += initial_balance
+        if date_from and include_initial:
+            initial_data = self._get_partner_initial_balance(data, partner, date_from)
+            if field == 'debit':
+                result += initial_data['debit']
+            elif field == 'credit':
+                result += initial_data['credit']
+            elif field == 'debit - credit':
+                result += initial_data['balance']
             
         return result
 
@@ -160,7 +159,7 @@ class ReportPartnerLedger(models.AbstractModel):
         Calculate initial balance for a partner before the date_from
         """
         if not date_from:
-            return 0.0
+            return {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
         query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
@@ -168,7 +167,9 @@ class ReportPartnerLedger(models.AbstractModel):
         params = [partner.id, tuple(data['computed']['move_state']), 
                  tuple(data['computed']['account_ids']), date_from] + query_get_data[2]
         
-        query = """SELECT COALESCE(SUM("account_move_line".debit - "account_move_line".credit), 0.0)
+        query = """SELECT COALESCE(SUM("account_move_line".debit), 0.0) as initial_debit,
+                          COALESCE(SUM("account_move_line".credit), 0.0) as initial_credit,
+                          COALESCE(SUM("account_move_line".debit - "account_move_line".credit), 0.0) as initial_balance
                 FROM """ + query_get_data[0] + """
                 JOIN account_move AS m ON (m.id = "account_move_line".move_id)
                 WHERE "account_move_line".partner_id = %s
@@ -180,7 +181,14 @@ class ReportPartnerLedger(models.AbstractModel):
         self.env.cr.execute(query, tuple(params))
         
         result_row = self.env.cr.fetchone()
-        return result_row[0] if result_row else 0.0
+        if result_row:
+            return {
+                'debit': result_row[0] or 0.0,
+                'credit': result_row[1] or 0.0, 
+                'balance': result_row[2] or 0.0
+            }
+        return {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
+
 
     @api.model
     def _get_report_values(self, docids, data=None):
