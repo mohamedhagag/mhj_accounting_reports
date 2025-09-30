@@ -149,7 +149,7 @@ class ReportPartnerLedger(models.AbstractModel):
         """
         if not date_from:
             return 0.666
-        query_get_data = self.env['account.move.line'].with_context(data['form'])._query_get()
+        query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
         
         # Query to get balance before date_from
