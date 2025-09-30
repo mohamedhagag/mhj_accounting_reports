@@ -14,21 +14,21 @@ class ReportPartnerLedger(models.AbstractModel):
         Uses pagination to avoid memory issues and includes initial balance.
         """
         BATCH_SIZE = 10000  # Process in batches to avoid memory issues
-
+        
         currency = self.env['res.currency']
         query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
-
+        
         # Get initial balance if date_from is set and initial_balance is requested
         date_from = data['form'].get('date_from')
         include_initial = data['form'].get('initial_balance', True)
         initial_data = self._get_partner_initial_balance(data, partner, date_from)
         initial_balance = initial_data['balance']
-
+        
         # Base query parameters
         base_params = [partner.id, tuple(data['computed']['move_state']), 
                       tuple(data['computed']['account_ids'])] + query_get_data[2]
-
+        
         # Base query without LIMIT/OFFSET
         base_query = """
             SELECT "account_move_line".id, "account_move_line".date, j.code, 
@@ -46,7 +46,7 @@ class ReportPartnerLedger(models.AbstractModel):
                 AND m.state IN %s
                 AND "account_move_line".account_id IN %s AND """ + query_get_data[1] + reconcile_clause + """
                 ORDER BY "account_move_line".date"""
-
+        
         full_account = []
         offset = 0
         running_sum = initial_balance  # Start with initial balance
@@ -70,23 +70,23 @@ class ReportPartnerLedger(models.AbstractModel):
             'progress': initial_balance
         }
         full_account.append(initial_line)
-
+        
         lang_code = self.env.context.get('lang') or 'en_US'
         lang = self.env['res.lang']
         lang_id = lang._lang_get(lang_code)
-
+        
         # Process in batches
         while True:
             # Add LIMIT and OFFSET for pagination
             paginated_query = base_query + f" LIMIT {BATCH_SIZE} OFFSET {offset}"
             params = tuple(base_params)
-
+            
             self.env.cr.execute(paginated_query, params)
             batch_res = self.env.cr.dictfetchall()
-
+            
             if not batch_res:
                 break
-
+            
             # Process batch
             for r in batch_res:
                 r['date'] = r['date']
@@ -98,17 +98,17 @@ class ReportPartnerLedger(models.AbstractModel):
                 r['progress'] = running_sum
                 r['currency_id'] = currency.browse(r.get('currency_id'))
                 full_account.append(r)
-
+            
             offset += len(batch_res)
-
+            
             # If we got fewer results than batch size, we're done
             if len(batch_res) < BATCH_SIZE:
                 break
-
+            
             # Force garbage collection every few batches
             if offset % (BATCH_SIZE * 5) == 0:
                 gc.collect()
-
+        
         return full_account
 
     def _sum_partner(self, data, partner, field):
@@ -117,14 +117,14 @@ class ReportPartnerLedger(models.AbstractModel):
         """
         if field not in ['debit', 'credit', 'debit - credit']:
             return 0.0
-
+            
         result = 0.0
         query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
         params = [partner.id, tuple(data['computed']['move_state']), 
                  tuple(data['computed']['account_ids'])] + query_get_data[2]
-
+        
         # Optimized query with proper JOIN structure for better performance
         query = """SELECT COALESCE(SUM(""" + field + """), 0.0)
                 FROM """ + query_get_data[0] + """
@@ -133,13 +133,13 @@ class ReportPartnerLedger(models.AbstractModel):
                     AND m.state IN %s
                     AND "account_move_line".account_id IN %s
                     AND """ + query_get_data[1] + reconcile_clause
-
+                    
         self.env.cr.execute(query, tuple(params))
-
+        
         result_row = self.env.cr.fetchone()
         if result_row:
             result = result_row[0] or 0.0
-
+        
         # Add initial balance to the sum if requested and date_from is set
         # date_from = data['form'].get('date_from')
         # include_initial = data['form'].get('initial_balance', True)
@@ -151,7 +151,7 @@ class ReportPartnerLedger(models.AbstractModel):
         #         result += initial_data['credit']
         #     elif field == 'debit - credit':
         #         result += initial_data['balance']
-
+            
         return result
 
     def _get_partner_initial_balance(self, data, partner, date_from):
@@ -162,11 +162,11 @@ class ReportPartnerLedger(models.AbstractModel):
             return {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
         query_get_data = self.env['account.move.line']._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
-
+        
         # Query to get balance before date_from
         params = [partner.id, tuple(data['computed']['move_state']), 
                  tuple(data['computed']['account_ids']), date_from] + query_get_data[2]
-
+        
         query = """SELECT COALESCE(SUM("account_move_line".debit), 0.0) as initial_debit,
                           COALESCE(SUM("account_move_line".credit), 0.0) as initial_credit,
                           COALESCE(SUM("account_move_line".debit - "account_move_line".credit), 0.0) as initial_balance
@@ -177,9 +177,9 @@ class ReportPartnerLedger(models.AbstractModel):
                     AND "account_move_line".account_id IN %s
                     AND "account_move_line".date < %s
                     AND """ + query_get_data[1] + reconcile_clause
-
+                    
         self.env.cr.execute(query, tuple(params))
-
+        
         result_row = self.env.cr.fetchone()
         if result_row:
             return {
@@ -189,29 +189,6 @@ class ReportPartnerLedger(models.AbstractModel):
             }
         return {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
 
-    def _get_partner_initial_debit(self, data, partner):
-        """Get initial debit for a partner"""
-        date_from = data["form"].get("date_from")
-        if not date_from:
-            return 0.0
-        initial_data = self._get_partner_initial_balance(data, partner, date_from)
-        return initial_data["debit"]
-
-    def _get_partner_initial_credit(self, data, partner):
-        """Get initial credit for a partner"""
-        date_from = data["form"].get("date_from")
-        if not date_from:
-            return 0.0
-        initial_data = self._get_partner_initial_balance(data, partner, date_from)
-        return initial_data["credit"]
-
-    def _get_partner_initial_balance_amount(self, data, partner):
-        """Get initial balance for a partner"""
-        date_from = data["form"].get("date_from")
-        if not date_from:
-            return 0.0
-        initial_data = self._get_partner_initial_balance(data, partner, date_from)
-        return initial_data["balance"]
 
     @api.model
     def _get_report_values(self, docids, data=None):
@@ -260,14 +237,12 @@ class ReportPartnerLedger(models.AbstractModel):
         partners = sorted(partners, key=lambda x: (x.ref or '', x.name or ''))
 
         return {
-            "doc_ids": partner_ids,
-            "doc_model": self.env["res.partner"],
-            "data": data,
-            "docs": partners,
-            "time": time,
-            "lines": self._lines,
-            "sum_partner": self._sum_partner,
-            "get_partner_initial_debit": self._get_partner_initial_debit,
-            "get_partner_initial_credit": self._get_partner_initial_credit,
-            "get_partner_initial_balance": self._get_partner_initial_balance_amount,
+            'doc_ids': partner_ids,
+            'doc_model': self.env['res.partner'],
+            'data': data,
+            'docs': partners,
+            'time': time,
+            'lines': self._lines,
+            'sum_partner': self._sum_partner,
+            'get_partner_initial_balance': self._get_partner_initial_balance
         }

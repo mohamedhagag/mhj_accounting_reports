@@ -67,20 +67,21 @@
                                     </td>
                                 </tr>
                                 <t t-if="data['form']['initial_balance'] and data['form']['date_from']">
+                                    <t t-set='initial_balance' t-value="_get_partner_initial_balance(data, o, data['form']['date_from'])"/>
                                     <tr style="background-color: #FFF2CC;">
                                         <td colspan="4">
                                             <em>Initial Balance (before <span t-esc="data['form']['date_from']"/>)</em>
                                         </td>
                                         <td class="text-end">
-                                            <em t-esc="get_partner_initial_debit(data, o)"
+                                            <em t-esc="initial_balance.get('debit', 0)"
+                                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" />
+                                        </td>
+                                        <td class="text-end">
+                                            <em t-esc="initial_balance.get('credit', 0)"
                                                 t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                         </td>
                                         <td class="text-end">
-                                            <em t-esc="get_partner_initial_credit(data, o)"
-                                                t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
-                                        </td>
-                                        <td class="text-end">
-                                            <em t-esc="get_partner_initial_balance(data, o)"
+                                            <em t-esc="initial_balance.get('balance', 0)"
                                                 t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
                                         </td>
                                     </tr>
