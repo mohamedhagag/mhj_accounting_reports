@@ -244,4 +244,7 @@ class ReportPartnerLedger(models.AbstractModel):
             'time': time,
             'lines': self._lines,
             'sum_partner': self._sum_partner,
+            'get_partner_initial_balance': self._get_partner_initial_balance,
+            'get_partner_initial_debit': self._get_partner_initial_debit,
+            'get_partner_initial_credit': self._get_partner_initial_credit,
         }
