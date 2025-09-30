@@ -31,7 +31,7 @@
                             <p t-if="data['form']['target_move'] == 'posted'">All Posted Entries</p>
                         </div>
                     </div>
-
+                    <h1 t-esc="data['form']" />
                     <table class="table table-sm table-reports">
                         <thead>
                             <tr>
