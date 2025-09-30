@@ -166,38 +166,41 @@ class ReportPartnerLedger(models.AbstractModel):
             return default_result
             
         try:
-            AML = self.env['account.move.line']
-            query_get_data = AML.with_context(data['form'].get('used_context', {}))._query_get()
-            reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
-            
             # Ensure we have valid computed data
             if not data.get('computed', {}).get('account_ids'):
+                _logger.warning("No account_ids in computed data for partner %s", partner.name)
                 return default_result
             
-            # Query to get balance before date_from
-            params = [partner.id, tuple(data['computed']['move_state']), 
-                     tuple(data['computed']['account_ids']), date_from] + query_get_data[2]
+            # Use a simple query without query_get to avoid date filtering issues
+            reconcile_clause = "" if data['form']['reconciled'] else ' AND aml.full_reconcile_id IS NULL '
             
-            query = """SELECT COALESCE(SUM("account_move_line".debit), 0.0) as initial_debit,
-                              COALESCE(SUM("account_move_line".credit), 0.0) as initial_credit,
-                              COALESCE(SUM("account_move_line".debit - "account_move_line".credit), 0.0) as initial_balance
-                    FROM """ + query_get_data[0] + """
-                    JOIN account_move AS m ON (m.id = "account_move_line".move_id)
-                    WHERE "account_move_line".partner_id = %s
-                        AND m.state IN %s
-                        AND "account_move_line".account_id IN %s
-                        AND "account_move_line".date < %s
-                        AND """ + query_get_data[1] + reconcile_clause
+            # Simple direct query for initial balance
+            params = [partner.id, tuple(data['computed']['move_state']), 
+                     tuple(data['computed']['account_ids']), date_from]
+            
+            query = """SELECT COALESCE(SUM(aml.debit), 0.0) as initial_debit,
+                              COALESCE(SUM(aml.credit), 0.0) as initial_credit,
+                              COALESCE(SUM(aml.debit - aml.credit), 0.0) as initial_balance
+                    FROM account_move_line aml
+                    JOIN account_move am ON (am.id = aml.move_id)
+                    WHERE aml.partner_id = %s
+                        AND am.state IN %s
+                        AND aml.account_id IN %s
+                        AND aml.date < %s""" + reconcile_clause
                         
             self.env.cr.execute(query, tuple(params))
             
             result_row = self.env.cr.fetchone()
             if result_row and len(result_row) >= 3:
-                return {
+                result = {
                     'debit': float(result_row[0] or 0.0),
                     'credit': float(result_row[1] or 0.0), 
                     'balance': float(result_row[2] or 0.0)
                 }
+                # Log only if there's actual balance (for debugging)
+                if result['debit'] != 0 or result['credit'] != 0:
+                    _logger.info("Initial balance for partner %s before %s: %s", partner.name, date_from, result)
+                return result
         except Exception as e:
             # Log error in development mode but don't break the report
             _logger.warning("Error calculating initial balance for partner %s: %s", partner.id, str(e))
