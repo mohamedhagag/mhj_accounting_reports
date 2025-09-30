@@ -21,7 +21,7 @@ class ReportPartnerLedger(models.AbstractModel):
         
         # Get initial balance if date_from is set and initial_balance is requested
         initial_balance = 0.0
-        date_from = data['form'].get('used_context', {}).get('date_from')
+        date_from = data['form'].get('date_from')
         include_initial = data['form'].get('initial_balance', True)
         if date_from and include_initial:
             initial_balance = self._get_partner_initial_balance(data, partner, date_from)
