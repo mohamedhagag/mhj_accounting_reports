@@ -70,7 +70,7 @@
                                     <t t-set='initial_balance' t-value="_get_partner_initial_balance(data, o, data['form']['date_from'])"/>
                                     <tr style="background-color: #FFF2CC;">
                                         <td colspan="4">
-                                            <em>Initial Balance (before <span t-esc="data['form']['date_from']"/>)</em>
+                                            <em>Initial Balance </em>
                                         </td>
                                         <td class="text-end">
                                             <em t-esc="initial_balance.get('debit', 0)"
