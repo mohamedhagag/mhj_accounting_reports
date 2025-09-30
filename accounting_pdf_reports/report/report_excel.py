@@ -157,13 +157,13 @@ class PartnerLedgerXlsx(models.AbstractModel):
     _name = 'report.accounting_pdf_reports.partner_ledger_xlsx'
     _description = 'Partner Ledger XLSX Report'
     _inherit = 'report.report_xlsx.abstract' if XLSX_AVAILABLE else []
-    
+
     def generate_xlsx_report(self, workbook, data, objects):
         """Main method called by Odoo's report_xlsx framework"""
         if not XLSX_AVAILABLE:
             raise UserError(_("Excel export requires the 'report_xlsx' module to be installed. "
                             "Please install the 'report_xlsx' module and restart Odoo."))
-        
+
         self._generate_partner_ledger_xlsx(workbook, data, objects)
 
     def _generate_partner_ledger_xlsx(self, workbook, data, partners):
@@ -198,7 +198,7 @@ class PartnerLedgerXlsx(models.AbstractModel):
             'num_format': '#,##0.00', 'border': 1, 'align': 'right'
         })
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
-        
+
         # Special format for initial balance lines
         init_balance_format = workbook.add_format({
             'bold': True, 'bg_color': '#FFF2CC', 'border': 1,
@@ -242,9 +242,9 @@ class PartnerLedgerXlsx(models.AbstractModel):
         partners = report_data.get('docs', [])
         lines_func = report_data.get('lines')
         sum_func = report_data.get('sum_partner')
-        get_initial_debit = report_data.get('get_partner_initial_debit')
-        get_initial_credit = report_data.get('get_partner_initial_credit')
-        get_initial_balance = report_data.get('get_partner_initial_balance')
+        get_initial_debit = report_data.get("get_partner_initial_balance_safe").get("debit")
+        get_initial_credit = report_data.get("get_partner_initial_balance_safe").get("credit")
+        get_initial_balance = report_data.get('get_partner_initial_balance_safe').get('balance')
 
         for partner in partners:
             # Partner header
@@ -266,12 +266,12 @@ class PartnerLedgerXlsx(models.AbstractModel):
             for line in partner_lines:
                 # Check if this is an initial balance line
                 is_initial_balance = line.get('name', '') == 'Initial Balance' or line.get('displayed_name', '') == 'Initial Balance'
-                
+
                 # Use special formatting for initial balance lines
                 line_text_format = init_balance_format if is_initial_balance else text_format
                 line_number_format = init_number_format if is_initial_balance else number_format
                 line_date_format = init_balance_format if is_initial_balance else date_format
-                
+
                 worksheet.write(row, 0, line.get('date', ''), line_date_format)
                 worksheet.write(row, 1, line.get('code', ''), line_text_format)
                 worksheet.write(row, 2, line.get('a_name', ''), line_text_format)
@@ -311,18 +311,18 @@ class PartnerLedgerXlsx(models.AbstractModel):
                     'italic': True, 'bg_color': '#FFF2CC', 'border': 1,
                     'align': 'left', 'font_color': '#7F6000'
                 })
-                
+
                 initial_debit_val = get_initial_debit(report_data.get('data'), partner)
                 initial_credit_val = get_initial_credit(report_data.get('data'), partner)
                 initial_balance_val = get_initial_balance(report_data.get('data'), partner)
-                
+
                 if initial_debit_val != 0.0 or initial_credit_val != 0.0:
                     worksheet.write(row, 4, f'Initial Balance (before {date_from}):', initial_text_format)
                     worksheet.write(row, 5, initial_debit_val, initial_format)
                     worksheet.write(row, 6, initial_credit_val, initial_format)
                     worksheet.write(row, 7, initial_balance_val, initial_format)
                     row += 1
-            
+
             row += 1
 
 
@@ -427,4 +427,3 @@ class TrialBalanceXlsx(models.AbstractModel):
         worksheet.write(row, 2, total_debit, total_format)
         worksheet.write(row, 3, total_credit, total_format)
         worksheet.write(row, 4, total_balance, total_format)
-
