@@ -23,7 +23,15 @@ class ReportPartnerLedger(models.AbstractModel):
         
         try:
             currency = self.env['res.currency']
-            query_get_data = self.env['account.move.line']._query_get()
+            # Set proper context for query_get with date filters
+            ctx = dict(self.env.context)
+            ctx.update({
+                'date_from': data['form'].get('date_from'),
+                'date_to': data['form'].get('date_to'),
+                'state': data['form'].get('target_move', 'posted'),
+                'company_ids': [self.env.company.id],
+            })
+            query_get_data = self.env['account.move.line'].with_context(ctx)._query_get()
             reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
             
             # Get initial balance if date_from is set and initial_balance is requested
@@ -130,7 +138,15 @@ class ReportPartnerLedger(models.AbstractModel):
             return 0.0
             
         result = 0.0
-        query_get_data = self.env['account.move.line']._query_get()
+        # Set proper context for query_get with date filters
+        ctx = dict(self.env.context)
+        ctx.update({
+            'date_from': data['form'].get('date_from'),
+            'date_to': data['form'].get('date_to'),
+            'state': data['form'].get('target_move', 'posted'),
+            'company_ids': [self.env.company.id],
+        })
+        query_get_data = self.env['account.move.line'].with_context(ctx)._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
         params = [partner.id, tuple(data['computed']['move_state']), 
@@ -164,7 +180,13 @@ class ReportPartnerLedger(models.AbstractModel):
             return default_result
             
         try:
-            query_get_data = self.env['account.move.line']._query_get()
+            # Set proper context for query_get (no date filters for initial balance)
+            ctx = dict(self.env.context)
+            ctx.update({
+                'state': data['form'].get('target_move', 'posted'),
+                'company_ids': [self.env.company.id],
+            })
+            query_get_data = self.env['account.move.line'].with_context(ctx)._query_get()
             reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
             
             # Ensure we have valid computed data
@@ -222,7 +244,15 @@ class ReportPartnerLedger(models.AbstractModel):
         data['computed'] = {}
 
         obj_partner = self.env['res.partner']
-        query_get_data = self.env['account.move.line']._query_get()
+        # Set proper context for query_get with date filters
+        ctx = dict(self.env.context)
+        ctx.update({
+            'date_from': data['form'].get('date_from'),
+            'date_to': data['form'].get('date_to'),
+            'state': data['form'].get('target_move', 'posted'),
+            'company_ids': [self.env.company.id],
+        })
+        query_get_data = self.env['account.move.line'].with_context(ctx)._query_get()
         data['computed']['move_state'] = ['draft', 'posted']
         if data['form'].get('target_move', 'all') == 'posted':
             data['computed']['move_state'] = ['posted']
