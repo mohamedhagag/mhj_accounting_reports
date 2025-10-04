@@ -46,7 +46,7 @@
             <t t-foreach="docs" t-as="o">
               <tbody>
                 <tr>
-                  <td colspan="4"><strong t-esc="o.ref" /> - <strong t-esc="o.name" /></td>
+                  <td colspan="2"><strong t-esc="o.ref" /> - <strong t-esc="o.name" /></td>
                   <td class="text-end"><strong t-esc="sum_partner(data, o, 'debit')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                   <td class="text-end"><strong t-esc="sum_partner(data, o, 'credit')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                   <td class="text-end"><strong t-esc="sum_partner(data, o, 'debit - credit')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
