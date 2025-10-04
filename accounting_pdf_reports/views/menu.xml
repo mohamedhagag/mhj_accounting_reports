@@ -3,7 +3,7 @@
 
   <menuitem id="menu_finance_pdf_reports"
     name="PDF Reports"
-    sequence="10"
+    sequence="999"
     parent="account.menu_finance_reports" />
 
   <menuitem id="menu_finance_legal_statement"
