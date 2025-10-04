@@ -7,17 +7,17 @@
     parent="account.menu_finance_reports" />
 
   <menuitem id="menu_finance_legal_statement"
-    name="Financial Reports"
+    name="Financial Reports PDF"
     sequence="10"
     parent="menu_finance_pdf_reports" />
 
   <menuitem id="menu_finance_partner_reports"
-    name="Partner Reports"
+    name="Partner Reports PDF"
     sequence="20"
     parent="menu_finance_pdf_reports" />
 
   <menuitem id="menu_finance_audit_reports"
-    name="Audit Reports"
+    name="Audit Reports PDF"
     sequence="30"
     parent="menu_finance_pdf_reports" />
 
