@@ -69,16 +69,18 @@
                     <table class="table table-sm table-reports">
                       <tr>
                         <th style="background-color: #eee !important; font-size: 12px !important; width:15%;" class="text-center align-middle" rowspan="999"><span t-esc="inv.name"/></th>
-                        <th style="background-color: #eee !important; font-size: 12px !important; width:60%;" class="text-center">صنف</th>
-                        <th style="background-color: #eee !important; font-size: 12px !important; width:10%;" class="text-center">كمية</th>
-                        <th style="background-color: #eee !important; font-size: 12px !important; width:15%;" class="text-center">سعر</th>
-                        <th style="background-color: #eee !important; font-size: 12px !important; width:15%;" class="text-center">اجمالي</th>
+                        <th style="background-color: #eee !important; font-size: 12px !important; width:45%;" class="text-center">Item</th>
+                        <th style="background-color: #eee !important; font-size: 12px !important; width:10%;" class="text-center">Quantity</th>
+                        <th style="background-color: #eee !important; font-size: 12px !important; width:10%;" class="text-center">Price</th>
+                        <th style="background-color: #eee !important; font-size: 12px !important; width:10%;" class="text-center">Sub.Total</th>
+                        <th style="background-color: #eee !important; font-size: 12px !important; width:10%;" class="text-center">Total</th>
                       </tr>
                       <tr t-foreach="inv.invoice_line_ids" t-as="inv_line">
                         <td style="font-size: 12px !important;" class="text-center"><span t-field="inv_line.name"/></td>
                         <td style="font-size: 12px !important;" class="text-center"><span t-field="inv_line.quantity"/></td>
                         <td style="font-size: 12px !important;" class="text-center"><span t-field="inv_line.price_unit"/></td>
                         <td style="font-size: 12px !important;" class="text-center"><span t-esc="inv_line.price_subtotal"/></td>
+                        <td style="font-size: 12px !important;" class="text-center"><span t-esc="inv_line.price_total"/></td>
                       </tr>
                     </table>
                 </td>
