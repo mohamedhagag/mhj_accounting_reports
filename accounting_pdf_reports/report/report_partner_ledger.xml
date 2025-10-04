@@ -82,10 +82,10 @@
                       </tr>
                     </table>
                 </td>
-                  <td class="text-end"><span t-esc="line['debit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
-                  <td class="text-end"><span t-esc="line['credit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
-                  <td class="text-end"><span t-esc="line['progress']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
-                  <td class="text-end" t-if="data['form']['amount_currency']"><t t-if="line['currency_id']"><span t-esc="line['amount_currency']" t-options="{'widget': 'monetary', 'display_currency': line['currency_id']}" /></t>
+                  <td class="text-end"><span t-esc="line['debit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" class="align-middle" /></td>
+                  <td class="text-end"><span t-esc="line['credit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" class="align-middle" /></td>
+                  <td class="text-end"><span t-esc="line['progress']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" class="align-middle" /></td>
+                  <td class="text-end" t-if="data['form']['amount_currency']"><t t-if="line['currency_id']"><span t-esc="line['amount_currency']" t-options="{'widget': 'monetary', 'display_currency': line['currency_id']}" class="align-middle" /></t>
                   </td>
                 </tr>
               </tbody>
