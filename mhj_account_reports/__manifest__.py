@@ -8,7 +8,7 @@
     "summary": "Hajjaj.Pro Accounting Financial Reports",
     "sequence": "1",
     "author": "Hajjaj.Pro, MTJR.Cloud",
-    "license": "LGPL-3",
+    "license": "AGPL-3",
     "company": "Hajjaj.Pro",
     "maintainer": "Hajjaj.Pro",
     "website": "https://hajjaj.pro",
