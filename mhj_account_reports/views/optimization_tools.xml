@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Optimization Tools Action -->
+    <record id="action_account_report_optimization" model="ir.actions.act_window">
+        <field name="name">Report Optimization Tools</field>
+        <field name="res_model">account.report.optimization</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Optimization Tools Form View -->
+    <record id="view_account_report_optimization_form" model="ir.ui.view">
+        <field name="name">account.report.optimization.form</field>
+        <field name="model">account.report.optimization</field>
+        <field name="arch" type="xml">
+            <form string="Report Optimization Tools">
+                <div class="alert alert-info" role="alert">
+                    <strong>Performance Optimization Tools</strong><br/>
+                    These tools help optimize accounting reports for large datasets with millions of journal items.
+                </div>
+                
+                <group string="Database Optimization">
+                    <div class="o_row">
+                        <button name="create_performance_indexes" string="Create Performance Indexes" 
+                               type="object" class="btn-primary"
+                               help="Create database indexes to speed up report queries"/>
+                    </div>
+                    <div class="o_row">
+                        <button name="analyze_table_statistics" string="Update Table Statistics" 
+                               type="object" class="btn-secondary"
+                               help="Update database statistics for better query planning"/>
+                    </div>
+                    <div class="o_row">
+                        <button name="get_table_statistics" string="View Table Statistics" 
+                               type="object" class="btn-secondary"
+                               help="View current database table statistics"/>
+                    </div>
+                </group>
+                
+                <group string="Maintenance Tools">
+                    <div class="o_row">
+                        <button name="vacuum_analyze_accounting_tables" string="Analyze Accounting Tables" 
+                               type="object" class="btn-warning"
+                               help="Analyze accounting tables (run during maintenance windows)"/>
+                    </div>
+                </group>
+                
+                <div class="alert alert-warning" role="alert">
+                    <strong>Important Notes:</strong><br/>
+                    - Create indexes during low-usage periods as it may temporarily lock tables<br/>
+                    - Table analysis should be run regularly for optimal performance<br/>
+                    - For very large databases, consider running these operations during maintenance windows
+                </div>
+                
+                <footer>
+                    <button string="Close" class="btn btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Main Optimization Menu -->
+    <menuitem id="menu_reports_optimization"
+              name="Performance Tools"
+              parent="account.menu_finance_reports"
+              sequence="100"/>
+              
+    <!-- Menu for Optimization Tools -->
+    <menuitem id="menu_account_report_optimization"
+              name="Report Optimization"
+              parent="mhj_account_reports.menu_reports_optimization"
+              action="action_account_report_optimization"
+              sequence="10"/>
+
+</odoo>
