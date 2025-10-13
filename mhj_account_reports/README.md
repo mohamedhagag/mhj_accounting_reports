@@ -1,6 +1,6 @@
 # Hajjaj.Pro Accounting Financial Reports
 
-This module provides comprehensive financial reports for Odoo Community Edition, with advanced performance optimizations for handling millions of journal items. It also supports professional Excel (XLSX) export for major accounting reports.
+This module provides comprehensive financial reports for Odoo, with advanced performance optimizations for handling millions of journal items. It also supports professional Excel (XLSX) export for major accounting reports.
 
 ---
 
