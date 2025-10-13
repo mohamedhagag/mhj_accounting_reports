@@ -37,7 +37,7 @@
         "report/report_aged_partner.xml",
         "report/report_journal_audit.xml",
         "report/report_journal_entries.xml",
-        "views/optimization_tools.xml",
+        # "views/optimization_tools.xml",
     ],
     "external_dependencies": {
         "python": ["psutil", "xlsxwriter"],
