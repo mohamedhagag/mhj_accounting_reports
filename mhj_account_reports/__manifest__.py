@@ -1,7 +1,7 @@
 {
     "name": "Hajjaj.Pro Accounting Financial Reports",
     "version": "18.0.1.3",
-    "price": 25,
+    "price": 15,
     "currency": "EUR",
     "category": "Invoicing Management",
     "description": "Hajjaj.Pro Accounting Financial Reports",
