@@ -14,6 +14,7 @@
     "website": "https://hajjaj.pro",
     "support": "odooapps@hajjaj.pro",
     "depends": ["account", "report_xlsx"],
+    "images": ["static/description/banner.png"],
     "data": [
         "security/ir.model.access.csv",
         "data/account_account_type.xml",
