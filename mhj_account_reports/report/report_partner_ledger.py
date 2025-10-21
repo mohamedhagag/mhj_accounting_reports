@@ -79,7 +79,7 @@ class ReportPartnerLedger(models.AbstractModel):
                     'displayed_name': 'Initial Balance',
                     'progress': initial_balance
                 }
-                # full_account.append(initial_line)
+                full_account.append(initial_line)
             
             lang_code = self.env.context.get('lang') or 'en_US'
             lang = self.env['res.lang']
