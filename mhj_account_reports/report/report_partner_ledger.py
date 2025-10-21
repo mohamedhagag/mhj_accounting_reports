@@ -16,7 +16,6 @@ class ReportPartnerLedger(models.AbstractModel):
         Optimized version for handling millions of journal items per partner.
         Uses pagination to avoid memory issues and includes initial balance.
         """
-        ctx = data.get('form', {})
         if not partner or not data.get('computed', {}).get('account_ids'):
             return []
             
@@ -25,7 +24,7 @@ class ReportPartnerLedger(models.AbstractModel):
         try:
             currency = self.env['res.currency']
             AML = self.env['account.move.line']
-            query_get_data = AML.with_context(ctx)._query_get()
+            query_get_data = AML.with_context(data['form'].get('used_context', {}))._query_get()
             reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
             
             # Get initial balance if date_from is set and initial_balance is requested
