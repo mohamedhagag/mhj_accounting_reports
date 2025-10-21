@@ -54,7 +54,7 @@
                 <t t-if="data['form']['initial_balance']">
                   <t t-set='initial_balance' t-value="get_partner_initial_balance(data, o, data['form']['date_from'])" />
                   <tr style="background-color: #FFF2CC;">
-                    <td colspan="4"><em>Initial Balance </em></td>
+                    <td colspan="2"><em>Initial Balance </em></td>
                     <td class="text-end"><em t-esc="initial_balance.get('debit', 0) if initial_balance else 0" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                     <td class="text-end"><em t-esc="initial_balance.get('credit', 0) if initial_balance else 0" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                     <td class="text-end"><em t-esc="initial_balance.get('balance', 0) if initial_balance else 0" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
