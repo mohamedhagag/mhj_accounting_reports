@@ -51,7 +51,7 @@
                   <td class="text-end"><strong t-esc="sum_partner(data, o, 'credit')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                   <td class="text-end"><strong t-esc="sum_partner(data, o, 'debit - credit')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}" /></td>
                 </tr>
-                <tr t-foreach="lines(data, o)" t-as="line" t-attf-style="background-color: #{line['ref'] == 'Initial Balance' and 'FFF2CC' or 'white'};">
+                <tr t-foreach="lines(data, o)" t-as="line" t-attf-style="background-color: #{line['ref'] == 'Initial Balance' and '#FFF2CC' or 'white'};">
                   <t t-set="inv_n" t-value="o.mapped('invoice_ids.line_ids').filtered(lambda l: l.id == line['id']).move_id"/>
                   <t t-set="inv" t-value="inv_n.filtered(lambda i: i.move_type in ('out_invoice','out_refund','in_invoice','in_refund'))"/>
                   <td><span t-esc="line['date']" /></td>
