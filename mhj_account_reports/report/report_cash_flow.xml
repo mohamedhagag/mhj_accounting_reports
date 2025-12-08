@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_cash_flow">
+        <t t-call="web.html_container">
+            <t t-set="data_report_margin_top" t-value="12"/>
+            <t t-set="data_report_header_spacing" t-value="9"/>
+            <t t-set="data_report_dpi" t-value="110"/>
+            <t t-call="web.internal_layout">
+                <div class="page">
+                    <h2><span t-esc="company.name"/>: Cash Flow Statement</h2>
+
+                    <div class="row mt32 mb32">
+                        <div class="col-6">
+                            <strong>Period:</strong>
+                            <p>
+                                <t t-if="date_from"><strong>From :</strong> <span t-esc="date_from"/><br/></t>
+                                <t t-if="date_to"><strong>To :</strong> <span t-esc="date_to"/></t>
+                            </p>
+                        </div>
+                        <div class="col-6">
+                            <strong>Currency:</strong>
+                            <p><span t-esc="currency.symbol"/></p>
+                        </div>
+                    </div>
+
+                    <h3>Cash Flow Statement</h3>
+                    
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="text-align:right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Operating Activities -->
+                            <tr>
+                                <td colspan="2"><strong>OPERATING ACTIVITIES</strong></td>
+                            </tr>
+                            <t t-foreach="operating_activities.items()" t-as="activity">
+                                <tr>
+                                    <td style="padding-left: 20px;"><t t-esc="activity[0]"/></td>
+                                    <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(activity[1])"/></td>
+                                </tr>
+                            </t>
+                            <tr style="border-top: 1px solid black;">
+                                <td><strong>Net Operating Activities</strong></td>
+                                <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(net_operating)"/></strong></td>
+                            </tr>
+
+                            <!-- Investing Activities -->
+                            <tr>
+                                <td colspan="2"><strong>INVESTING ACTIVITIES</strong></td>
+                            </tr>
+                            <t t-foreach="investing_activities.items()" t-as="activity">
+                                <tr>
+                                    <td style="padding-left: 20px;"><t t-esc="activity[0]"/></td>
+                                    <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(activity[1])"/></td>
+                                </tr>
+                            </t>
+                            <tr style="border-top: 1px solid black;">
+                                <td><strong>Net Investing Activities</strong></td>
+                                <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(net_investing)"/></strong></td>
+                            </tr>
+
+                            <!-- Financing Activities -->
+                            <tr>
+                                <td colspan="2"><strong>FINANCING ACTIVITIES</strong></td>
+                            </tr>
+                            <t t-foreach="financing_activities.items()" t-as="activity">
+                                <tr>
+                                    <td style="padding-left: 20px;"><t t-esc="activity[0]"/></td>
+                                    <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(activity[1])"/></td>
+                                </tr>
+                            </t>
+                            <tr style="border-top: 1px solid black;">
+                                <td><strong>Net Financing Activities</strong></td>
+                                <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(net_financing)"/></strong></td>
+                            </tr>
+
+                            <!-- Summary -->
+                            <tr style="border-top: 2px solid black; border-bottom: 2px solid black;">
+                                <td><strong>Net Change in Cash</strong></td>
+                                <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(actual_net_change)"/></strong></td>
+                            </tr>
+                            <tr>
+                                <td>Beginning Cash Balance</td>
+                                <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(beginning_cash)"/></td>
+                            </tr>
+                            <tr style="border-bottom: 2px solid black;">
+                                <td>Ending Cash Balance</td>
+                                <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(ending_cash)"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <t t-if="unclassified != 0">
+                        <p class="mt32">
+                            <strong>Note:</strong> Unclassified Cash Flow: <t t-esc="'{:,.2f}'.format(unclassified)"/>
+                        </p>
+                    </t>
+
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_cash_flow" model="ir.actions.report">
+        <field name="name">Cash Flow Statement</field>
+        <field name="model">account.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mhj_account_reports.report_cash_flow</field>
+        <field name="report_file">mhj_account_reports.report_cash_flow</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

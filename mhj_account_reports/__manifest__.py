@@ -40,6 +40,8 @@
         "report/report_aged_partner.xml",
         "report/report_journal_audit.xml",
         "report/report_journal_entries.xml",
+        "report/report_cash_flow.xml",
+        "report/report_journal_ledger.xml",
         # "views/optimization_tools.xml",
     ],
     "external_dependencies": {

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_journal_ledger">
+        <t t-call="web.html_container">
+            <t t-set="data_report_margin_top" t-value="12"/>
+            <t t-set="data_report_header_spacing" t-value="9"/>
+            <t t-set="data_report_dpi" t-value="110"/>
+            <t t-call="web.internal_layout">
+                <div class="page">
+                    <h2><span t-esc="company.name"/>: Journal Ledger</h2>
+
+                    <div class="row mt32">
+                        <div class="col-6">
+                            <p>
+                                <t t-if="date_from"><strong>Date from :</strong> <span t-esc="date_from"/><br/></t>
+                                <t t-if="date_to"><strong>Date to :</strong> <span t-esc="date_to"/></t>
+                            </p>
+                        </div>
+                    </div>
+
+                    <t t-foreach="journals" t-as="journal">
+                        <h3 style="margin-top: 30px;"><span t-esc="journal['journal_code']"/> - <span t-esc="journal['journal_name']"/></h3>
+                        
+                        <t t-foreach="journal['accounts']" t-as="account">
+                            <h4 style="margin-top: 20px;"><span t-esc="account['account_code']"/> - <span t-esc="account['account_name']"/></h4>
+                            
+                            <table class="table table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Move</th>
+                                        <th>Partner</th>
+                                        <th>Reference</th>
+                                        <th>Label</th>
+                                        <th style="text-align:right;">Debit</th>
+                                        <th style="text-align:right;">Credit</th>
+                                        <th style="text-align:right;">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5">Initial Balance</td>
+                                        <td colspan="3" style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(account['initial_balance'])"/></strong></td>
+                                    </tr>
+                                    <t t-foreach="account['lines']" t-as="line">
+                                        <tr>
+                                            <td><t t-esc="line['date']"/></td>
+                                            <td><t t-esc="line['move_name']"/></td>
+                                            <td><t t-esc="line['partner']"/></td>
+                                            <td><t t-esc="line['ref']"/></td>
+                                            <td><t t-esc="line['label']"/></td>
+                                            <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(line['debit'])"/></td>
+                                            <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(line['credit'])"/></td>
+                                            <td style="text-align:right;"><t t-esc="'{:,.2f}'.format(line['balance'])"/></td>
+                                        </tr>
+                                    </t>
+                                    <tr style="border-top: 1px solid black;">
+                                        <td colspan="5"><strong>Account Total</strong></td>
+                                        <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(account['debit'])"/></strong></td>
+                                        <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(account['credit'])"/></strong></td>
+                                        <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(account['balance'])"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <div style="margin-top: 20px; padding: 10px; background-color: #f0f0f0;">
+                            <strong>Journal Total - <span t-esc="journal['journal_name']"/></strong><br/>
+                            Debit: <span t-esc="'{:,.2f}'.format(journal['debit'])"/><br/>
+                            Credit: <span t-esc="'{:,.2f}'.format(journal['credit'])"/>
+                        </div>
+                    </t>
+
+                    <div style="margin-top: 30px; padding: 15px; border: 2px solid black; background-color: #f9f9f9;">
+                        <h4>Grand Total</h4>
+                        <table class="table table-condensed">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Total Debit:</strong></td>
+                                    <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(total_debit)"/></strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Credit:</strong></td>
+                                    <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(total_credit)"/></strong></td>
+                                </tr>
+                                <tr style="border-top: 1px solid black;">
+                                    <td><strong>Difference:</strong></td>
+                                    <td style="text-align:right;"><strong><t t-esc="'{:,.2f}'.format(total_debit - total_credit)"/></strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_journal_ledger" model="ir.actions.report">
+        <field name="name">Journal Ledger</field>
+        <field name="model">account.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mhj_account_reports.report_journal_ledger</field>
+        <field name="report_file">mhj_account_reports.report_journal_ledger</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>
