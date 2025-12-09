@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Client Action for Interactive Trial Balance -->
+    <record id="action_trial_balance_interactive" model="ir.actions.client">
+        <field name="name">Trial Balance (Interactive)</field>
+        <field name="tag">mhj_trial_balance_interactive</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menu Item for Interactive Trial Balance -->
+    <menuitem id="menu_trial_balance_interactive"
+              name="Trial Balance Interactive"
+              sequence="21"
+              action="action_trial_balance_interactive"
+              parent="menu_finance_audit_reports"
+              groups="account.group_account_manager,account.group_account_user"/>
+
+</odoo>

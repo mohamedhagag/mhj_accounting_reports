@@ -2,6 +2,7 @@ import logging
 from . import wizard
 from . import models
 from . import report
+from . import controllers
 
 _logger = logging.getLogger(__name__)
 

@@ -44,7 +44,21 @@
         "report/report_cash_flow.xml",
         "report/report_journal_ledger.xml",
         # "views/optimization_tools.xml",
+        "views/interactive_reports.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            # External libraries
+            "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js",
+            # Base JavaScript components
+            "mhj_account_reports/static/src/js/financial_reports.js",
+            "mhj_account_reports/static/src/js/trial_balance_report.js",
+            # XML Templates
+            "mhj_account_reports/static/src/xml/financial_reports_templates.xml",
+            # Styles
+            "mhj_account_reports/static/src/css/financial_reports.css",
+        ],
+    },
     "external_dependencies": {
         "python": ["psutil", "xlsxwriter"],
     },

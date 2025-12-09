@@ -1,0 +1,187 @@
+/* MHJ Accounting Reports Styles */
+
+.o_action_manager .o_content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    position: relative;
+}
+
+.o_action_manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.mhj_report_content {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100%;
+}
+
+/* Control Panel */
+.o_control_panel {
+    background-color: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px 20px;
+}
+
+.o_cp_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.o_cp_top_right button {
+    margin-left: 5px;
+}
+
+.o_cp_title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Filter Panel */
+.mhj_filter_panel {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Cards */
+.mhj_financial_report .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.mhj_financial_report .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #007bff;
+    padding: 20px;
+}
+
+.mhj_financial_report .card-header h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+}
+
+.mhj_financial_report .card-header p {
+    margin: 5px 0 0 0;
+    color: #666;
+}
+
+.mhj_financial_report .card-body {
+    padding: 25px;
+}
+
+/* Tables */
+.mhj_financial_report table {
+    font-size: 14px;
+}
+
+.mhj_financial_report table thead th {
+    border-top: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    padding: 12px 8px;
+}
+
+.mhj_financial_report table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.mhj_financial_report .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.mhj_financial_report table tfoot {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Filter Items */
+.list-group-item {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item i {
+    margin-right: 8px;
+    width: 16px;
+    display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .o_cp_top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .o_cp_top_right {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .mhj_filter_panel .row > div {
+        margin-bottom: 15px;
+    }
+    
+    .mhj_report_content {
+        padding: 10px;
+    }
+}
+
+/* Loading State */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Table responsive improvements */
+.table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
