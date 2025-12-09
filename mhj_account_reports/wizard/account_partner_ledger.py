@@ -14,7 +14,6 @@ class AccountPartnerLedger(models.TransientModel):
     reconciled = fields.Boolean('Reconciled Entries')
     initial_balance = fields.Boolean(
         string='Include Initial Balances',
-        default=True,
         help='If you selected date, this field allow you to add a row '
              'to display the amount of debit/credit/balance that precedes '
              'the filter you have set.'
