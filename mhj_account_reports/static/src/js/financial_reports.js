@@ -29,6 +29,7 @@ export class FinancialReportBase extends Component {
         this.state = useState({
             reportData: null,
             loading: true,
+            showDebug: false,
             filters: this.getDefaultFilters(),
             filterData: {},
             showFilters: false,
