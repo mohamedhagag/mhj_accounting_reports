@@ -20,6 +20,12 @@ class AccountPartnerLedger(models.TransientModel):
              'the filter you have set.'
     )
 
+    @api.onchange('date_from')
+    def _onchange_date_from(self):
+        """Auto-enable initial_balance when date_from is selected"""
+        if self.date_from:
+            self.initial_balance = True
+
     def _get_report_data(self, data):
         data = self.pre_print_report(data)
         data['form'].update({'reconciled': self.reconciled,
