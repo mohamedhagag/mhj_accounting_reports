@@ -86,6 +86,10 @@ class AccountingReportsController(http.Controller):
             'company_id': request.env.company.id,
         }
         
+        # Search all accounts for trial balance (report will filter via context)
+        accounts = request.env['account.account'].search([])
+        _logger.info(f"Found {len(accounts)} accounts to process")
+        
         # Build data structure expected by existing _get_report_values
         data = {
             'form': {
@@ -100,7 +104,7 @@ class AccountingReportsController(http.Controller):
                 'company_id': [request.env.company.id, request.env.company.name],
             },
             'model': 'account.account',
-            'ids': [],
+            'ids': accounts.ids,
         }
         
         # Set context with all the filter values
@@ -111,9 +115,9 @@ class AccountingReportsController(http.Controller):
         ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
         # Add active_model and active_ids (required by report model)
         ctx['active_model'] = 'account.account'
-        ctx['active_ids'] = []
+        ctx['active_ids'] = accounts.ids  # Pass all account IDs
         
-        _logger.info(f"Calling report _get_report_values with context: {ctx}")
+        _logger.info(f"Calling report _get_report_values with {len(accounts)} accounts")
         # Call existing report method with proper context
         result = report_model.with_context(ctx)._get_report_values([], data)
         
