@@ -346,12 +346,15 @@ class TrialBalanceXlsx(models.AbstractModel):
         # Set column widths
         worksheet.set_column('A:A', 15)  # Code
         worksheet.set_column('B:B', 40)  # Account Name
-        worksheet.set_column('C:C', 15)  # Debit
-        worksheet.set_column('D:D', 15)  # Credit  
-        worksheet.set_column('E:E', 15)  # Balance
+        worksheet.set_column('C:C', 15)  # Initial Debit
+        worksheet.set_column('D:D', 15)  # Initial Credit
+        worksheet.set_column('E:E', 15)  # Debit
+        worksheet.set_column('F:F', 15)  # Credit
+        worksheet.set_column('G:G', 15)  # Ending Debit
+        worksheet.set_column('H:H', 15)  # Ending Credit
         
         # Title
-        worksheet.merge_range('A1:E1', 'Trial Balance Report', title_format)
+        worksheet.merge_range('A1:H1', 'Trial Balance Report', title_format)
         
         # Report parameters
         row = 3
@@ -366,38 +369,53 @@ class TrialBalanceXlsx(models.AbstractModel):
         row += 2
         
         # Column headers
-        headers = ['Account Code', 'Account Name', 'Debit', 'Credit', 'Balance']
+        headers = ['Account Code', 'Account Name', 'Initial Debit', 'Initial Credit', 'Debit', 'Credit', 'Ending Debit', 'Ending Credit']
         for col, header in enumerate(headers):
             worksheet.write(row, col, header, header_format)
         row += 1
         
         # Process accounts
         accounts = report_data.get('Accounts', [])
+        total_initial_debit = 0.0
+        total_initial_credit = 0.0
         total_debit = 0.0
         total_credit = 0.0
-        total_balance = 0.0
+        total_end_debit = 0.0
+        total_end_credit = 0.0
         
         for account in accounts:
             code = account.get('code', '')
             name = account.get('name', '')
+            initial_debit = account.get('initial_debit', 0.0)
+            initial_credit = account.get('initial_credit', 0.0)
             debit = account.get('debit', 0.0)
             credit = account.get('credit', 0.0)
-            balance = account.get('balance', 0.0)
+            end_debit = account.get('end_debit', 0.0)
+            end_credit = account.get('end_credit', 0.0)
             
             worksheet.write(row, 0, code, text_format)
             worksheet.write(row, 1, name, text_format)
-            worksheet.write(row, 2, debit, number_format)
-            worksheet.write(row, 3, credit, number_format)
-            worksheet.write(row, 4, balance, number_format)
+            worksheet.write(row, 2, initial_debit, number_format)
+            worksheet.write(row, 3, initial_credit, number_format)
+            worksheet.write(row, 4, debit, number_format)
+            worksheet.write(row, 5, credit, number_format)
+            worksheet.write(row, 6, end_debit, number_format)
+            worksheet.write(row, 7, end_credit, number_format)
             
+            total_initial_debit += initial_debit
+            total_initial_credit += initial_credit
             total_debit += debit
             total_credit += credit
-            total_balance += balance
+            total_end_debit += end_debit
+            total_end_credit += end_credit
             row += 1
         
         # Total row
         worksheet.write(row, 0, '', text_format)
         worksheet.write(row, 1, 'TOTAL', total_format)
-        worksheet.write(row, 2, total_debit, total_format)
-        worksheet.write(row, 3, total_credit, total_format)
-        worksheet.write(row, 4, total_balance, total_format)
+        worksheet.write(row, 2, total_initial_debit, total_format)
+        worksheet.write(row, 3, total_initial_credit, total_format)
+        worksheet.write(row, 4, total_debit, total_format)
+        worksheet.write(row, 5, total_credit, total_format)
+        worksheet.write(row, 6, total_end_debit, total_format)
+        worksheet.write(row, 7, total_end_credit, total_format)
