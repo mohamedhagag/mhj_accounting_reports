@@ -68,6 +68,14 @@
         <field name="binding_type">report</field>
     </record>
 
+    <record id="action_report_cash_flow" model="ir.actions.report">
+        <field name="name">Cash Flow Statement</field>
+        <field name="model">account.cash.flow.wizard</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">mhj_account_reports.report_cash_flow</field>
+        <field name="report_file">mhj_account_reports.report_cash_flow</field>
+    </record>
+
     <!-- Excel Export Actions -->
     <record id="action_report_general_ledger_xlsx" model="ir.actions.report">
         <field name="name">General Ledger (Excel)</field>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="accounting_cash_flow_report_view" model="ir.ui.view">
+        <field name="name">Cash Flow Statement</field>
+        <field name="model">account.cash.flow.wizard</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="arch" type="xml">
+            <form string="Cash Flow Statement Options">
+                <group>
+                    <group>
+                        <field name="target_move" widget="radio"/>
+                        <field name="date_from"/>
+                    </group>
+                    <group>
+                        <field name="company_id" invisible="1"/>
+                        <field name="date_to" />
+                    </group>
+                </group>
+            <footer>
+                <button name="check_report" string="Print" type="object" default_focus="1" class="oe_highlight" data-hotkey="q"/>
+                <button string="Cancel" class="btn btn-secondary" special="cancel" data-hotkey="z"/>
+            </footer>
+        </form>
+        </field>
+    </record>
+
+    <record id="action_account_cash_flow_report" model="ir.actions.act_window">
+        <field name="name">Cash Flow Statement</field>
+        <field name="res_model">account.cash.flow.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="accounting_cash_flow_report_view"/>
+        <field name="context">{}</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_account_cash_flow_report"
+              name="Cash Flow Statement"
+              sequence="35"
+              action="action_account_cash_flow_report"
+              parent="menu_finance_audit_reports"
+              groups="account.group_account_manager,account.group_account_user"/>
+
+</odoo>
