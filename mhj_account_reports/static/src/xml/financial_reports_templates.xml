@@ -145,7 +145,7 @@
                 Accounts array length: <t t-esc="state.reportData?.accounts?.length || 0"/><br/>
                 Has totals: <t t-esc="!!state.reportData?.totals"/><br/>
                 <t t-if="state.reportData?.accounts?.length &gt; 0">
-                    First account: <t t-esc="JSON.stringify(state.reportData.accounts[0])"/>
+                    First account ID: <t t-esc="state.reportData.accounts[0]?.id"/> | Code: <t t-esc="state.reportData.accounts[0]?.code"/>
                 </t>
             </div>
             <t t-if="state.reportData">
