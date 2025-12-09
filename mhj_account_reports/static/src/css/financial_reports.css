@@ -3,12 +3,15 @@
 .o_action_manager {
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    min-height: 100vh;
 }
 
 .o_action_manager .o_content {
     overflow-y: auto;
     overflow-x: hidden;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0; /* allow flex child to shrink and enable scrolling */
     position: relative;
 }
 
