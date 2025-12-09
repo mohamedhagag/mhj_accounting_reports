@@ -175,7 +175,7 @@ class ReportCashFlow(models.AbstractModel):
     @api.model
     def _get_report_values(self, docids, data=None):
         """Generate cash flow report data."""
-        if not data.get('form') or not self.env.context.get('active_model'):
+        if not data or not data.get('form'):
             raise UserError(_("Form content is missing, this report cannot be printed."))
         
         company = self.env.company
@@ -203,6 +203,9 @@ class ReportCashFlow(models.AbstractModel):
         net_unclassified = actual_net_change - classified_total
         
         return {
+            'doc_ids': docids,
+            'doc_model': data.get('model', 'account.cash.flow.wizard'),
+            'docs': self.env[data.get('model', 'account.cash.flow.wizard')].browse(docids),
             'data': data['form'],
             'company': company,
             'currency': currency,
