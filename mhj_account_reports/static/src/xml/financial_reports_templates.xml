@@ -64,7 +64,7 @@
                                    t-model="state.filterText.journals"
                                    t-on-input="() => this.filterItems('journals')"/>
                             <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredJournals" t-as="journal" t-key="journal.id">
+                                <t t-foreach="state.filteredJournals" t-as="journal" t-key="journal.id || journal_index">
                                     <a href="#" class="list-group-item list-group-item-action p-2 small"
                                        t-on-click.prevent="() => this.toggleItem('journal_ids', journal.id, journal.name)">
                                         <t t-if="state.filters.journal_ids?.includes(journal.id)">
@@ -88,7 +88,7 @@
                                    t-model="state.filterText.accounts"
                                    t-on-input="() => this.filterItems('accounts')"/>
                             <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredAccounts" t-as="account" t-key="account.id">
+                                <t t-foreach="state.filteredAccounts" t-as="account" t-key="account.id || account_index">
                                     <a href="#" class="list-group-item list-group-item-action p-2 small"
                                        t-on-click.prevent="() => this.toggleItem('account_ids', account.id, account.code)">
                                         <t t-if="state.filters.account_ids?.includes(account.id)">
@@ -186,7 +186,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="state.reportData.accounts" t-as="account" t-key="account.id">
+                                    <t t-foreach="state.reportData.accounts" t-as="account" t-key="account.id || account_index">
                                         <tr>
                                             <td><t t-esc="account.code"/></td>
                                             <td><t t-esc="account.name"/></td>

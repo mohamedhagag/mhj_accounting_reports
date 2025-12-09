@@ -60,11 +60,19 @@ class AccountingReportsController(http.Controller):
                 ('company_id', 'in', [False, company.id])
             ], order='name')
             
+            # Build filter data ensuring all records have valid IDs
+            accounts_data = [{'id': a.id, 'code': a.code or '', 'name': a.name or ''} for a in accounts if a.id]
+            journals_data = [{'id': j.id, 'code': j.code or '', 'name': j.name or ''} for j in journals if j.id]
+            partners_data = [{'id': p.id, 'name': p.name or ''} for p in partners if p.id]
+            analytics_data = [{'id': a.id, 'name': a.name or ''} for a in analytic_accounts if a.id]
+            
+            _logger.info(f"Filter data: {len(accounts_data)} accounts, {len(journals_data)} journals, {len(partners_data)} partners, {len(analytics_data)} analytics")
+            
             return {
-                'accounts': [{'id': a.id, 'code': a.code, 'name': a.name} for a in accounts],
-                'journals': [{'id': j.id, 'code': j.code, 'name': j.name} for j in journals],
-                'partners': [{'id': p.id, 'name': p.name} for p in partners],
-                'analytic_accounts': [{'id': a.id, 'name': a.name} for a in analytic_accounts],
+                'accounts': accounts_data,
+                'journals': journals_data,
+                'partners': partners_data,
+                'analytic_accounts': analytics_data,
                 'company': {'id': company.id, 'name': company.name, 'currency': company.currency_id.symbol},
             }
         except Exception as e:
