@@ -76,6 +76,16 @@ class AccountingReportsController(http.Controller):
         _logger.info(f"_get_trial_balance_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_trialbalance']
         
+        # Build proper context like the wizard does
+        used_context = {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+        
         # Build data structure expected by existing _get_report_values
         data = {
             'form': {
@@ -86,24 +96,25 @@ class AccountingReportsController(http.Controller):
                 'journal_ids': filters.get('journal_ids', []),
                 'account_ids': filters.get('account_ids', []),
                 'analytic_account_ids': filters.get('analytic_account_ids', []),
-                'used_context': {
-                    'date_from': filters.get('date_from'),
-                    'date_to': filters.get('date_to'),
-                    'state': filters.get('state', 'posted'),
-                    'strict_range': True if filters.get('date_from') else False,
-                }
+                'used_context': used_context,
+                'company_id': [request.env.company.id, request.env.company.name],
             },
             'model': 'account.account',
+            'ids': [],
         }
         
-        # Set context
-        request.env.context = dict(request.env.context, 
-                                   active_model='account.account',
-                                   active_ids=[])
+        # Set context with all the filter values
+        _logger.info(f"Setting context: {used_context}")
+        ctx = dict(request.env.context, **used_context)
+        ctx['account_ids'] = filters.get('account_ids', [])
+        ctx['partner_ids'] = filters.get('partner_ids', [])
+        ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
         
-        _logger.info(f"Calling report _get_report_values")
-        # Call existing report method
-        result = report_model._get_report_values([], data)
+        _logger.info(f"Calling report _get_report_values with context: {ctx}")
+        # Call existing report method with proper context
+        with request.env.context(ctx):
+            result = report_model.with_context(ctx)._get_report_values([], data)
+        
         _logger.info(f"Report returned: {len(result.get('Accounts', []))} accounts")
         
         # Transform data for JSON/JavaScript consumption
