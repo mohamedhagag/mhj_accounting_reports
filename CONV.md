@@ -249,41 +249,17 @@ MOVE_LINE_LIMIT = 50000  # per account
 - **Solution**: Updated all 16 calls to use `this.formatNumber()`
 - **Result**: Template can now properly reference class methods
 
-**Issue 2: Empty Accounts Array** (ROOT CAUSE)
-- **Problem**: Controller was passing context to report model incorrectly
-- **Symptoms**: `accounts` array length was 0, but response structure was correct
-- **Root Cause**: Report model's `_query_get()` method needs proper context with:
-  - `date_from`, `date_to` (for date filtering)
-  - `state` (posted/all)
-  - `journal_ids` (journal filtering)
-  - `company_id` (company context)
-  - All other filter parameters
-  
-**Solution Applied**:
-```python
-# Built proper context like the wizard does
-used_context = {
-    'journal_ids': filters.get('journal_ids') or False,
-    'state': filters.get('state', 'posted'),
-    'date_from': filters.get('date_from') or False,
-    'date_to': filters.get('date_to') or False,
-    'strict_range': True if filters.get('date_from') else False,
-    'company_id': request.env.company.id,
-}
+**Issue 2: Invalid Context Manager Syntax** ✅ FIXED
+- **Error**: `TypeError: 'frozendict' object is not callable`
+- **Code**: `with request.env.context(ctx):`
+- **Root Cause**: `request.env.context` is a **frozendict** (immutable dict), not a callable function
+- **Solution**: Removed the `with` statement, use only `.with_context(ctx)` on model
+- **Result**: Context properly applied to report model
 
-# Applied context to report model
-with request.env.context(ctx):
-    result = report_model.with_context(ctx)._get_report_values([], data)
-```
-
-### Root Cause Analysis
-The legacy report system (wizards + reports) uses a context-based architecture:
-1. Wizard collects filters → builds `used_context`
-2. Passes context to report via `report_action(records, data=data)`
-3. Report's `_get_report_values()` reads context to filter data
-4. `account.move.line._query_get()` uses context to build SQL WHERE clause
-
-The OWL controller was skipping step 1 & 2, passing incomplete context to the report model.
+**Issue 3: Empty Accounts Array** (CONSEQUENCE OF ISSUE 2)
+- When Issue 2 threw exception, controller returned `{'error': '...'}` 
+- OWL received error but data was null
+- After fixing Issue 2, context properly sets up report filtering
 
 ### Debugging Tools Added (Kept in Code)
 - **Console logs**: Show RPC response structure, accounts array, first account
