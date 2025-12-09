@@ -1,0 +1,572 @@
+# Conversation Log & Development Guide
+
+**Started**: December 9, 2025  
+**Last Updated**: Dec 9, 2025 - Complete Analysis & Roadmap  
+**Session**: OWL Migration - Legacy to Interactive Reports
+
+---
+
+## Project Overview
+
+### **mhj_accounting_reports** - Odoo 18 Advanced Accounting Reports Module
+- **Version**: 18.0.1.3 (Odoo 18)
+- **License**: AGPL-3
+- **Purpose**: Comprehensive financial reporting with performance optimizations for millions of journal items
+- **Target**: Hajjaj.Pro accounting solution with Excel export support
+- **Branch**: 18-dyn
+
+---
+
+## Key Architecture Components
+
+### 1. **Models** (`models/`)
+- **account_financial_report.py**: Hierarchical financial report structure with efficient level computation
+  - `_get_level()`: Optimized recursive level calculation using parent-child mapping
+  - Supports: View, Accounts, Account Type, Report Value types
+  - Field: `level` (computed, recursive)
+  
+- **account_move_line.py**: **CRITICAL OVERRIDE** - Extends `account.move.line`
+  - `_query_get(domain)`: Completely overridden method for custom SQL filtering
+  - **Odoo 18 Changes Implemented**:
+    - Uses `parent_state` instead of `move_id.state` 
+    - Handles `analytic_distribution` JSONB field (not `analytic_account_id`)
+    - Supports `aged_balance` context for date_maturity filtering
+    - Returns: `(tables, where_clause, where_clause_params)` tuple
+  
+- **account_optimization.py**: Database performance tools (indexes, statistics)
+- **memory_monitor.py**: Optional memory tracking via psutil
+
+### 2. **Wizards** (`wizard/`) - TransientModels for Report Generation
+**Base Hierarchy**:
+```
+account.common.report (base)
+  ├─ account.common.account.report
+  └─ account.common.partner.report
+```
+
+**Base Fields** (account.common.report):
+- `company_id`, `journal_ids`, `date_from`, `date_to`, `target_move`
+- **Performance Fields**: `enable_pagination`, `max_records_per_account`, `batch_size`
+
+**Report-Specific Wizards**:
+- `account.report.general.ledger` - General Ledger (initial_balance, sortby)
+- `account.report.partner.ledger` - Partner Ledger (amount_currency, reconciled)
+- `account.balance.report` - Trial Balance
+- `account.tax.report.wizard` - Tax Report
+- `account.aged.trial.balance` - Aged Partner Balance
+- `account.print.journal` - Journal Audit/Ledger
+- `accounting.report` - Financial Reports
+
+**Flow**: User inputs → `check_report()` → `_build_contexts()` → `_print_report()` or `_print_excel_report()`
+
+### 3. **Reports** (`report/`) - AbstractModels
+**Implements** `_get_report_values(docids, data)` for report data generation
+
+**Performance Patterns** (General Ledger Example):
+```python
+BATCH_SIZE = 10000  # Process accounts in batches
+MOVE_LINE_LIMIT = 50000  # Limit per account
+# Batch processing with gc.collect() between batches
+account_batches = [accounts[i:i + BATCH_SIZE] for i in range(0, len(accounts), BATCH_SIZE)]
+```
+
+**Report Models**:
+- `report.mhj_account_reports.report_general_ledger`
+- `report.mhj_account_reports.report_partnerledger`
+- `report.mhj_account_reports.report_trialbalance`
+- `report.mhj_account_reports.report_tax`
+- `report.mhj_account_reports.report_agedpartnerbalance`
+- `report.mhj_account_reports.report_financial`
+- `report.mhj_account_reports.report_journal`
+- `report.mhj_account_reports.report_journal_ledger`
+- `report.mhj_account_reports.report_cash_flow`
+
+### 4. **Excel Export** (`report/report_excel.py`)
+- **Classes**: `GeneralLedgerXlsx`, `PartnerLedgerXlsx`, `TrialBalanceXlsx` (others)
+- **Pattern**: Conditional inheritance from `report.report_xlsx.abstract`
+- **XLSX_AVAILABLE** flag for graceful degradation
+- Reuses existing report data via `_get_report_values()`
+- Uses xlsxwriter for professional formatting
+
+---
+
+## Odoo 18 Database Schema Changes
+
+### JSONB Fields
+1. **account.account.code_store** (company_dependent JSONB)
+   - Format: `{"1": "100000", "2": "100000"}` (company_id → code)
+   - Accessed via computed `code` field based on root_company
+
+2. **account.account.name** (JSONB with translations)
+   - Format: `{"en_US": "Cash", "ar": "نقدي"}`
+
+3. **account.move_line.analytic_distribution** (JSONB)
+   - Format: `{"123": 100.0, "456,789": 50.0}`
+   - Replaces `analytic_account_id` (many2one from Odoo 17)
+   - Query: `analytic_distribution @> '{"123": 50}'::jsonb`
+
+4. **parent_state** on move_line
+   - **Critical**: Use `parent_state` instead of `move_id.state`
+
+---
+
+## Report Output Matrix
+
+| Report | Wizard | PDF | Excel | Report Model |
+|--------|--------|-----|-------|--------------|
+| General Ledger | ✅ | ✅ | ✅ | report_general_ledger.py |
+| Partner Ledger | ✅ | ✅ | ✅ | report_partner_ledger.py |
+| Trial Balance | ✅ | ✅ | ✅ | report_trial_balance.py |
+| Tax Report | ✅ | ✅ | ❌ | report_tax.py |
+| Aged Partner | ✅ | ✅ | ❌ | report_aged_partner.py |
+| Financial | ✅ | ✅ | ❌ | report_financial.py |
+| Journal Audit | ✅ | ✅ | ❌ | report_journal.py |
+| Journal Ledger | ❌ | ✅ | ❌ | report_journal_ledger.py |
+| Cash Flow | ❌ | ✅ | ❌ | report_cash_flow.py |
+
+---
+
+## Key Files Structure
+
+### Critical Override
+- `models/account_move_line.py`: **Main override** for `_query_get()` - handles ALL date filtering, analytics, partners
+
+### Core Data Models
+- `models/account_financial_report.py`: Hierarchy + level computation
+- `models/account_account_type.py`: Account type definitions
+- `models/account_optimization.py`: Index creation, ANALYZE stats
+- `models/memory_monitor.py`: Optional psutil tracking
+
+### Wizards
+- `wizard/account_report_common.py`: Base class with performance fields
+- `wizard/account_general_ledger.py`: GL-specific (initial_balance, sortby)
+- `wizard/account_partner_ledger.py`: Partner-specific
+- `wizard/account_trial_balance.py`: TB-specific
+- `wizard/account_tax_report.py`: Tax-specific
+- `wizard/aged_partner.py`: Aged balance-specific
+- `wizard/account_journal_audit.py`: Journal-specific
+
+### Reports
+- `report/report_general_ledger.py`: **MAIN EXAMPLE** - batch processing, pagination, GC
+- `report/report_partner_ledger.py`
+- `report/report_trial_balance.py`
+- `report/report_tax.py`
+- `report/report_aged_partner.py`
+- `report/report_financial.py`
+- `report/report_journal.py`
+- `report/report_journal_ledger.py`
+- `report/report_cash_flow.py`
+
+### Excel
+- `report/report_excel.py`: GeneralLedgerXlsx, PartnerLedgerXlsx, TrialBalanceXlsx
+- Each worksheet: title, parameters, account headers, move lines, totals
+
+### Templates
+- `report/report_*.xml`: QWeb templates for PDF rendering
+- Accessed via `data['form']['used_context']`
+
+### Views/Menus
+- `views/menu.xml`: Main accounting menu
+- `views/financial_report.xml`: Financial hierarchy interface
+- `wizard/account_report_common_view.xml`: Base wizard view
+
+---
+
+## Performance Patterns (Critical)
+
+### Memory Management
+```python
+BATCH_SIZE = 10000  # accounts per batch
+MOVE_LINE_LIMIT = 50000  # per account
+# Process in batches with gc.collect() between
+```
+
+### Pagination
+- Configurable in wizard: `enable_pagination`, `max_records_per_account`
+- Default: 50,000 records per account
+
+### Database Indexes Created
+- `idx_aml_date_account`
+- `idx_aml_partner_date`
+- `idx_aml_account_partner_date`
+- `idx_aml_maturity_account`
+- `idx_aml_company_date`
+- `idx_am_state`
+- `idx_aml_reconcile`
+
+---
+
+## Known Issues & Gaps
+
+### Missing Excel Exports
+- ❌ Tax Report (no Excel model)
+- ❌ Aged Partner Balance (no Excel model)
+- ❌ Financial Report (no Excel model)
+- ❌ Journal Reports (no Excel models)
+- ❌ Cash Flow (no Excel model)
+
+### Odoo 18 Compatibility Notes
+- **account_move_line.py**: Correctly uses `parent_state` ✅
+- **analytic_distribution**: Implemented in `_query_get()` ✅
+- **code_store**: Not explicitly handled in reports (should work via ORM)
+- **name JSONB**: Not explicitly handled (should work via ORM)
+
+### Code Quality Issues
+- Hardcoded language in some SQL (`acc.name->>'en_US'` should use context lang)
+- Inconsistent batch sizes across reports
+- SQL injection risk in some optimization methods (index creation)
+- Missing error handling for empty result sets
+
+### Missing Features
+- No CSV export
+- No scheduled/email delivery
+- No period-over-period comparison
+- No drill-down in Excel
+- No pivot tables
+- No chart generation
+
+---
+
+## Dependencies
+- **Odoo Modules**: account, report_xlsx
+- **Python Packages**: psutil, xlsxwriter
+
+---
+
+## Session Status - OWL Migration & Debugging
+
+### Completed ✅
+- Deep code analysis of legacy + dynamic reports
+- Reviewed dynamic reports frontend design
+- Trial Balance dynamic report **FIXED** - data display issue resolved
+- Created comprehensive implementation roadmap
+
+### Issue Fixed: Trial Balance Not Displaying Data
+**Problem**: Template was calling `formatNumber()` without `this.` prefix
+- OWL templates require `this.` to access instance methods
+- Fixed 16 occurrences: 8 in tbody + 8 in tfoot
+- Data binding now correctly calls `this.formatNumber()` for number formatting
+
+### Next Steps
+- Implement OWL components for remaining 8 reports
+- Test Trial Balance with actual data
+- Begin General Ledger interactive component
+
+---
+
+## Migration Project: Legacy → OWL-based Interactive Reports
+
+### What We're Building
+Enhance **mhj_account_reports** (legacy Odoo 18 reports) with OWL components to provide:
+- Interactive, real-time filtering
+- Dynamic chart visualization
+- Modern responsive UI
+- Excel/PDF export capabilities
+- Performance optimizations for large datasets
+
+### Reference Frontend: mhj_financial_reports
+Using **mhj_dynamic_financial_reports** as design reference ONLY (not Python code).
+
+**Key Frontend Patterns from Reference**:
+1. **Base Component** (`FinancialReportBase`):
+   - Handles state management (filters, loading, data)
+   - Common methods: loadFilterData(), loadReport(), applyFilters(), resetFilters()
+   - Methods: filterItems(), toggleItem(), clearFilter()
+   - Export: exportExcel(), printReport()
+
+2. **Filter System**:
+   - Date range (date_from, date_to)
+   - State filter (posted/all)
+   - Multi-select dropdowns: journals, accounts, partners, analytics
+   - Search/filter text boxes for each dropdown
+   - Collapse/expand with "Clear" buttons
+
+3. **Template Structure** (`financial_reports_templates.xml`):
+   ```xml
+   <FinancialReportBase>
+     ├─ Control Panel (top bar with buttons)
+     ├─ Filter Panel (collapsible)
+     ├─ Report Content Area (dynamic based on report type)
+     └─ Charts (Chart.js integration)
+   ```
+
+4. **Report-Specific Components**:
+   - `ProfitLossReport` → content template + chart
+   - `BalanceSheetReport` → content template + chart
+   - `TrialBalanceReport` → content template + chart
+   - `CashFlowReport` → content template + chart
+   - `GeneralLedgerReport` → detailed table
+   - `PartnerLedgerReport` → partner breakdown table
+   - `JournalLedgerReport` → journal entries table
+
+5. **Chart Management** (`ChartManager` utility):
+   - `createBarChart()`, `createLineChart()`, `createDoughnutChart()`
+   - `getColorPalette()` for consistent colors
+   - `formatCurrency()` for tooltips
+   - `destroyChart()` for cleanup
+
+6. **CSS Design** (`financial_reports.css`):
+   - Modern card-based layout
+   - Bootstrap grid system (col-md-3, col-md-6, etc.)
+   - Responsive design for mobile
+   - Print styles (hide filters, adjust fonts)
+   - Hover effects on tables
+   - Collapsible sections
+
+7. **Export Functionality** (`html_to_excel.js`):
+   - Convert HTML tables to Excel
+   - Preserve formatting
+   - Support for multiple worksheets
+
+### Current OWL Implementation in mhj_account_reports
+- **Base**: `FinancialReportBase` (financial_reports.js)
+- **Trial Balance**: `TrialBalanceReport` (trial_balance_report.js)
+- **Interactive Menu**: Menu item `action_trial_balance_interactive` registered
+- **Controller**: `/mhj/accounting_reports/get_data` (main.py)
+- **Filter Data**: `/mhj/accounting_reports/get_filter_data` (main.py)
+
+### Reports Still Needing OWL Components
+
+**Already Implemented**:
+- ✅ Trial Balance (interactive, with chart)
+
+**Still Need OWL**:
+- General Ledger (started, no chart)
+- Partner Ledger (not visible in OWL)
+- Tax Report (wizard only, no interactive)
+- Aged Partner Balance (wizard only)
+- Financial Report (wizard only)
+- Journal Reports (wizard only)
+- Cash Flow (wizard only)
+
+**Strategy**:
+1. Create `XXXReport` class extending `FinancialReportBase`
+2. Create corresponding content template
+3. Register action in `ir.actions.client`
+4. Add menu items
+5. Extend controller with report-specific methods
+6. Reuse existing Python report models via controller methods
+
+---
+
+## Implementation Roadmap
+
+### Phase 1: Enhance Trial Balance (Complete)
+- ✅ Base OWL component created
+- ✅ Interactive filters working
+- ✅ Chart.js integration
+- ✅ Menu item registered
+- Status: DONE
+
+### Phase 2: Implement Remaining Reports
+**Priority 1 (Core Ledgers)**:
+1. General Ledger - detailed movement table with collapsible accounts
+   - Add: Initial balance row, collapsible move lines per account
+   - Chart: Account balance comparison
+   
+2. Partner Ledger - partner-wise breakdown
+   - Add: Partner section headers, collapsible transactions
+   - Chart: Top partners by balance
+   
+3. Trial Balance Details - drill-down from summary
+   - Add: Click to expand accounts to transactions
+   - Chart: Balance distribution pie chart
+
+**Priority 2 (Financial Statements)**:
+4. Profit & Loss - hierarchical structure with chart
+5. Balance Sheet - hierarchical structure with chart
+6. Cash Flow - timeline chart with drill-down
+
+**Priority 3 (Specialized)**:
+7. Tax Report - tax calculations with journal detail
+8. Aged Partner Balance - aging analysis with timeline
+9. Journal Audit - transaction log with filters
+
+### JavaScript Component Architecture
+
+**Base Class** (`financial_reports.js`):
+```javascript
+export class FinancialReportBase {
+  setup() {
+    // State management
+    this.state = {
+      reportData, loading, filters, filterData,
+      showFilters, filterText, filteredItems,
+      collapsedItems // Track expand/collapse state
+    }
+  }
+  
+  // Core methods
+  loadFilterData()  // Load dropdown options
+  loadReport()      // Fetch report data
+  applyFilters()    // Reload with new filters
+  resetFilters()    // Reset to defaults
+  toggleFilters()   // Show/hide filter panel
+  
+  // Filter helpers
+  filterItems(type)     // Search filter items
+  toggleItem(type, id)  // Add/remove from selection
+  clearFilter(type)     // Clear entire filter
+  
+  // Export methods
+  exportExcel()     // Convert to Excel
+  printReport()     // Print PDF
+  
+  // Chart rendering
+  renderChart()     // Create Chart.js instance
+}
+```
+
+**Specific Report Classes** (extend FinancialReportBase):
+```javascript
+export class GeneralLedgerReport extends FinancialReportBase {
+  reportType = 'general_ledger'
+  
+  // Override for GL-specific charts
+  renderChart() { }
+  
+  // Toggle account detail expansion
+  toggleAccountDetail(accountId) { }
+}
+
+// Similar for: PartnerLedgerReport, BalanceSheetReport, etc.
+```
+
+**Content Templates** (financial_reports_templates.xml):
+```xml
+<!-- General Ledger -->
+<t t-name="mhj_account_reports.GeneralLedgerReportContent">
+  <div class="card">
+    <div class="card-header">
+      <h3>General Ledger</h3>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <tbody>
+          <t t-foreach="reportData.accounts" t-as="account">
+            <!-- Account header row with expand button -->
+            <tr class="account-row" t-on-click="toggleAccountDetail(account.id)">
+              <td><i class="fa fa-chevron-right"/></td>
+              <td><t t-esc="account.code"/></td>
+              <td><t t-esc="account.name"/></td>
+              <td class="text-right"><t t-esc="account.balance"/></td>
+            </tr>
+            <!-- Detail rows (show if expanded) -->
+            <t t-if="collapsedItems[account.id]">
+              <t t-foreach="account.move_lines" t-as="line">
+                <tr class="move-line-row">
+                  <td></td>
+                  <td><t t-esc="line.date"/></td>
+                  <td><t t-esc="line.journal"/></td>
+                  <td><t t-esc="line.debit"/></td>
+                  <td><t t-esc="line.credit"/></td>
+                  <td class="text-right"><t t-esc="line.balance"/></td>
+                </tr>
+              </t>
+            </t>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</t>
+```
+
+**Controller Methods** (controllers/main.py):
+```python
+@http.route('/mhj/accounting_reports/get_data', type='json', auth='user')
+def get_report_data(self, report_type, filters):
+  if report_type == 'general_ledger':
+    return self._get_general_ledger_data(filters)
+  # ... etc
+
+def _get_general_ledger_data(self, filters):
+  # Call existing report model
+  report_model = request.env['report.mhj_account_reports.report_general_ledger']
+  
+  # Format data for JSON
+  return {
+    'accounts': [...],
+    'totals': {...},
+    'company': '...',
+    'currency_symbol': '...',
+  }
+```
+
+---
+
+## File Structure (After OWL Migration)
+
+### New OWL Components to Create:
+```
+static/src/js/
+  ├─ financial_reports.js        (existing - base class)
+  ├─ trial_balance_report.js      (existing - complete)
+  ├─ general_ledger_report.js     (NEW - extends base)
+  ├─ partner_ledger_report.js     (NEW - extends base)
+  ├─ profit_loss_report.js        (NEW - extends base)
+  ├─ balance_sheet_report.js      (NEW - extends base)
+  ├─ cash_flow_report.js          (NEW - extends base)
+  ├─ tax_report.js                (NEW - extends base)
+  ├─ aged_partner_report.js       (NEW - extends base)
+  ├─ journal_audit_report.js      (NEW - extends base)
+  ├─ chart_manager.js             (NEW - Chart.js utilities)
+  └─ html_to_excel.js             (NEW - Excel export)
+
+static/src/xml/
+  ├─ financial_reports_templates.xml (update - all templates)
+
+static/src/css/
+  ├─ financial_reports.css        (update - all styles)
+
+views/
+  ├─ interactive_reports.xml      (NEW - menu items + actions)
+
+controllers/
+  ├─ main.py                      (update - add report methods)
+```
+
+### Modified Existing Files:
+1. `__manifest__.py` - Add new menu actions, assets
+2. `models/__init__.py` - Import new models if needed
+3. `controllers/main.py` - Add RPC routes for all reports
+4. `views/interactive_reports.xml` - Menu items for all reports
+5. `static/src/xml/financial_reports_templates.xml` - All content templates
+6. `static/src/css/financial_reports.css` - All styling
+
+---
+
+## Key Learnings from Dynamic Reports
+
+### Do's ✅
+- Use `t-model` for two-way binding on filters
+- Use `t-foreach` for rendering lists with `t-key` for performance
+- Chain methods with `=>` arrow functions: `t-on-click="() => this.method()"`
+- Use `<t t-if>` for conditional rendering, avoid `<div v-if>`
+- Register components with: `registry.category("actions").add(tag, Class)`
+- Use RPC with `/route` for backend data: `rpc('/path/to/route', {params})`
+- Use `useState()` in setup() for reactive state
+- Use `useService()` for orm, notification, actionService
+- Responsive grid: `col-md-3`, `col-md-6` Bootstrap classes
+- Use Chart.js for visualizations via CDN
+
+### Don'ts ❌
+- Don't mix ORM calls in component - use RPC to controller
+- Don't put heavy computation in templates
+- Don't forget `this` binding in arrow functions
+- Don't hardcode currency symbols - use company data
+- Don't forget responsive design - test mobile
+- Don't forget i18n - use translation strings where possible
+- Don't create overlapping data in state - single source of truth
+
+### UI/UX Patterns
+- Control panel: Fixed top with button group (Apply, Reset, Export, Print, Filters)
+- Filters: Collapsible panel with grouped filters (dates, status, dropdowns)
+- Filter dropdowns: Search box + scrollable list with checkboxes + Clear button
+- Content: Card-based with header (title + subtitle) + body (table/chart)
+- Tables: Hover effects, striped rows, proper number formatting
+- Charts: Chart.js with proper legends and tooltips
+- Mobile: Stack vertically, reduce font sizes, single column layout
+- Print: Hide filters/buttons, adjust fonts, clean borders
+
+

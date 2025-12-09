@@ -170,24 +170,24 @@
                                         <tr>
                                             <td><t t-esc="account.code"/></td>
                                             <td><t t-esc="account.name"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.initial_debit)"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.initial_credit)"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.debit)"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.credit)"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.end_debit)"/></td>
-                                            <td class="text-end"><t t-esc="formatNumber(account.end_credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.initial_debit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.initial_credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.debit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.end_debit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.end_credit)"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
                                 <tfoot class="table-dark fw-bold">
                                     <tr>
                                         <td colspan="2">TOTAL</td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.initial_debit)"/></td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.initial_credit)"/></td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.period_debit)"/></td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.period_credit)"/></td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.ending_debit)"/></td>
-                                        <td class="text-end"><t t-esc="formatNumber(state.reportData.totals.ending_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_debit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.period_debit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.period_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.ending_debit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.ending_credit)"/></td>
                                     </tr>
                                 </tfoot>
                             </table>
