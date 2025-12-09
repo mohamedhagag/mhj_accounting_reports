@@ -17,7 +17,9 @@ class AccountingReportsController(http.Controller):
             _logger.info(f"Generating {report_type} report with filters: {filters}")
             
             if report_type == 'trial_balance':
-                return self._get_trial_balance_data(filters)
+                result = self._get_trial_balance_data(filters)
+                _logger.info(f"Trial Balance report data: accounts count = {len(result.get('accounts', []))}")
+                return result
             elif report_type == 'general_ledger':
                 return self._get_general_ledger_data(filters)
             elif report_type == 'partner_ledger':
@@ -71,6 +73,7 @@ class AccountingReportsController(http.Controller):
 
     def _get_trial_balance_data(self, filters):
         """Get Trial Balance report data using existing report model."""
+        _logger.info(f"_get_trial_balance_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_trialbalance']
         
         # Build data structure expected by existing _get_report_values
@@ -98,8 +101,10 @@ class AccountingReportsController(http.Controller):
                                    active_model='account.account',
                                    active_ids=[])
         
+        _logger.info(f"Calling report _get_report_values")
         # Call existing report method
         result = report_model._get_report_values([], data)
+        _logger.info(f"Report returned: {len(result.get('Accounts', []))} accounts")
         
         # Transform data for JSON/JavaScript consumption
         accounts_data = []
@@ -133,7 +138,7 @@ class AccountingReportsController(http.Controller):
             total_end_debit += account.get('end_debit', 0.0)
             total_end_credit += account.get('end_credit', 0.0)
         
-        return {
+        response = {
             'accounts': accounts_data,
             'totals': {
                 'initial_debit': total_initial_debit,
@@ -148,6 +153,8 @@ class AccountingReportsController(http.Controller):
             'date_from': filters.get('date_from'),
             'date_to': filters.get('date_to'),
         }
+        _logger.info(f"Returning response with {len(accounts_data)} accounts")
+        return response
 
     def _get_general_ledger_data(self, filters):
         """Get General Ledger report data - placeholder for future implementation."""

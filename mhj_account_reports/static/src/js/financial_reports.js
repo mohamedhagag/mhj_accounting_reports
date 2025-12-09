@@ -76,7 +76,9 @@ export class FinancialReportBase extends Component {
 
     async loadFilterData() {
         try {
+            console.log('Loading filter data...');
             const result = await rpc('/mhj/accounting_reports/get_filter_data');
+            console.log('Filter data received:', result);
             this.state.filterData = result || {};
         } catch (error) {
             this.notification.add("Failed to load filter data: " + (error.message || error), { type: "danger" });
@@ -88,16 +90,20 @@ export class FinancialReportBase extends Component {
     async loadReport() {
         this.state.loading = true;
         try {
+            console.log('Loading report:', this.reportType, 'with filters:', this.state.filters);
             const result = await rpc('/mhj/accounting_reports/get_data', {
                 report_type: this.reportType,
                 filters: this.state.filters,
             });
+            
+            console.log('RPC Response received:', result);
             
             if (result.error) {
                 this.notification.add("Error: " + result.error, { type: "danger" });
                 this.state.reportData = null;
             } else {
                 this.state.reportData = result || null;
+                console.log('Report data set:', this.state.reportData);
             }
         } catch (error) {
             this.notification.add("Failed to load report data: " + (error.message || error), { type: "danger" });

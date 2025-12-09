@@ -112,6 +112,10 @@
 
             <!-- Content Area -->
             <div class="mhj_report_content">
+                <!-- Debug info -->
+                <div style="font-size: 10px; color: #999; margin-bottom: 10px;">
+                    Loading: <t t-esc="state.loading"/> | Has Data: <t t-esc="!!state.reportData"/> | Constructor: <t t-esc="constructor.name"/>
+                </div>
                 <t t-if="state.loading">
                     <div class="text-center p-5">
                         <i class="fa fa-spinner fa-spin fa-3x text-primary"/>
@@ -119,7 +123,12 @@
                     </div>
                 </t>
                 <t t-else="">
-                    <t t-call="{{constructor.contentTemplate}}"/>
+                    <t t-if="constructor.contentTemplate">
+                        <t t-call="{{constructor.contentTemplate}}"/>
+                    </t>
+                    <t t-else="">
+                        <div class="alert alert-danger">No content template defined</div>
+                    </t>
                 </t>
             </div>
         </div>
