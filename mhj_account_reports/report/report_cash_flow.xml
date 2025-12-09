@@ -8,7 +8,7 @@
             <t t-set="data_report_dpi" t-value="110"/>
             <t t-call="web.internal_layout">
                 <div class="page">
-                    <h2><span t-esc="company.name"/>: Cash Flow Statement</h2>
+                    <h2><span t-esc="res_company.name"/>: Cash Flow Statement</h2>
 
                     <div class="row mt32 mb32">
                         <div class="col-6">
@@ -20,7 +20,7 @@
                         </div>
                         <div class="col-6">
                             <strong>Currency:</strong>
-                            <p><span t-esc="currency.symbol"/></p>
+                            <p><span t-esc="res_company.currency_id.symbol"/></p>
                         </div>
                     </div>
 
