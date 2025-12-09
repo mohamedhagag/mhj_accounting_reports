@@ -3,7 +3,7 @@
 
     <!-- Base Template for Financial Reports -->
     <t t-name="mhj_account_reports.FinancialReportBase">
-        <div class="o_action_manager o_xxl_form_view o_view_controller" style="display: flex; flex-direction: column; height: auto;">
+        <div class="o_action_manager o_xxl_form_view o_view_controller">
             <div class="o_control_panel">
                 <div class="o_cp_top">
                     <div class="o_cp_top_left">
@@ -111,7 +111,7 @@
             </t>
 
             <!-- Content Area -->
-            <div class="mhj_report_content" style="flex: 1; padding: 20px; background: white;">
+            <div class="o_content mhj_report_content" style="padding: 20px; background: white; overflow-y: auto;">
                 <!-- Debug info -->
                 <div style="font-size: 10px; color: #999; margin-bottom: 10px;">
                     Loading: <t t-esc="state.loading"/> | Has Data: <t t-esc="!!state.reportData"/> | Constructor: <t t-esc="constructor.name"/>
