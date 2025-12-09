@@ -144,8 +144,17 @@
                 reportData keys: <t t-esc="state.reportData ? Object.keys(state.reportData).join(', ') : 'N/A'"/><br/>
                 Accounts array length: <t t-esc="state.reportData?.accounts?.length || 0"/><br/>
                 Has totals: <t t-esc="!!state.reportData?.totals"/><br/>
+                Company: <t t-esc="state.reportData?.company || 'N/A'"/><br/>
+                Currency: <t t-esc="state.reportData?.currency_symbol || 'N/A'"/><br/>
+                Date From: <t t-esc="state.reportData?.date_from || 'N/A'"/><br/>
+                Date To: <t t-esc="state.reportData?.date_to || 'N/A'"/><br/>
                 <t t-if="state.reportData?.accounts?.length &gt; 0">
-                    First account ID: <t t-esc="state.reportData.accounts[0]?.id"/> | Code: <t t-esc="state.reportData.accounts[0]?.code"/>
+                    First account ID: <t t-esc="state.reportData.accounts[0]?.id"/> | Code: <t t-esc="state.reportData.accounts[0]?.code"/> | Name: <t t-esc="state.reportData.accounts[0]?.name"/><br/>
+                    Sample Balance - Debit: <t t-esc="state.reportData.accounts[0]?.debit"/> | Credit: <t t-esc="state.reportData.accounts[0]?.credit"/><br/>
+                </t>
+                <t t-if="state.reportData?.totals">
+                    Totals - Initial Debit: <t t-esc="state.reportData.totals.initial_debit"/> | Period Debit: <t t-esc="state.reportData.totals.period_debit"/> | Ending Debit: <t t-esc="state.reportData.totals.ending_debit"/><br/>
+                    Totals - Initial Credit: <t t-esc="state.reportData.totals.initial_credit"/> | Period Credit: <t t-esc="state.reportData.totals.period_credit"/> | Ending Credit: <t t-esc="state.reportData.totals.ending_credit"/><br/>
                 </t>
             </div>
             <t t-if="state.reportData">
