@@ -175,6 +175,8 @@ class ReportCashFlow(models.AbstractModel):
     @api.model
     def _get_report_values(self, docids, data=None):
         """Generate cash flow report data."""
+        _logger.info("Cash Flow Report - _get_report_values called with docids=%s, data=%s", docids, data)
+        
         if not data or not data.get('form'):
             raise UserError(_("Form content is missing, this report cannot be printed."))
         
@@ -182,6 +184,8 @@ class ReportCashFlow(models.AbstractModel):
         currency = company.currency_id
         date_from = data['form'].get('date_from')
         date_to = data['form'].get('date_to')
+        
+        _logger.info("Cash Flow Report - Processing from %s to %s for company %s", date_from, date_to, company.name)
         
         # Get cash balances
         beginning_cash = self._get_cash_balance(date_from, '<')
@@ -202,7 +206,7 @@ class ReportCashFlow(models.AbstractModel):
         # Calculate unclassified
         net_unclassified = actual_net_change - classified_total
         
-        return {
+        result = {
             'doc_ids': docids,
             'doc_model': data.get('model', 'account.cash.flow.wizard'),
             'docs': self.env[data.get('model', 'account.cash.flow.wizard')].browse(docids),
@@ -222,3 +226,6 @@ class ReportCashFlow(models.AbstractModel):
             'ending_cash': ending_cash,
             'actual_net_change': actual_net_change,
         }
+        
+        _logger.info("Cash Flow Report - Returning result with keys: %s", list(result.keys()))
+        return result
