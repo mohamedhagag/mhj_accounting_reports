@@ -109,6 +109,9 @@ class AccountingReportsController(http.Controller):
         ctx['account_ids'] = filters.get('account_ids', [])
         ctx['partner_ids'] = filters.get('partner_ids', [])
         ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
+        # Add active_model and active_ids (required by report model)
+        ctx['active_model'] = 'account.account'
+        ctx['active_ids'] = []
         
         _logger.info(f"Calling report _get_report_values with context: {ctx}")
         # Call existing report method with proper context
