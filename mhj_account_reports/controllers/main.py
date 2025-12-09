@@ -112,8 +112,7 @@ class AccountingReportsController(http.Controller):
         
         _logger.info(f"Calling report _get_report_values with context: {ctx}")
         # Call existing report method with proper context
-        with request.env.context(ctx):
-            result = report_model.with_context(ctx)._get_report_values([], data)
+        result = report_model.with_context(ctx)._get_report_values([], data)
         
         _logger.info(f"Report returned: {len(result.get('Accounts', []))} accounts")
         
