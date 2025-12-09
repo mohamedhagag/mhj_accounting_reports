@@ -186,13 +186,200 @@ class AccountingReportsController(http.Controller):
         return response
 
     def _get_general_ledger_data(self, filters):
-        """Get General Ledger report data - placeholder for future implementation."""
-        return {'error': 'General Ledger interactive report not yet implemented'}
+        """Get General Ledger report data using existing report model."""
+        _logger.info(f"_get_general_ledger_data called with filters: {filters}")
+        report_model = request.env['report.mhj_account_reports.report_general_ledger']
+
+        # Context similar to wizard
+        used_context = {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+
+        # Accounts: respect selection if provided
+        account_ids = filters.get('account_ids') or []
+        if account_ids:
+            accounts = request.env['account.account'].browse(account_ids)
+        else:
+            accounts = request.env['account.account'].search([])
+        _logger.info(f"GL accounts to process: {len(accounts)} (filtered={bool(account_ids)})")
+
+        # Form payload mirroring wizard fields
+        data = {
+            'form': {
+                'date_from': filters.get('date_from'),
+                'date_to': filters.get('date_to'),
+                'target_move': filters.get('state', 'posted'),
+                'display_account': filters.get('display_account', 'all'),
+                'journal_ids': filters.get('journal_ids', []),
+                'account_ids': account_ids,
+                'analytic_account_ids': filters.get('analytic_account_ids', []),
+                'partner_ids': filters.get('partner_ids', []),
+                'initial_balance': filters.get('initial_balance', True),
+                'sortby': filters.get('sortby', 'sort_date'),
+                'used_context': used_context,
+                'company_id': [request.env.company.id, request.env.company.name],
+            },
+            'model': 'account.account',
+            'ids': accounts.ids,
+        }
+
+        ctx = dict(request.env.context, **used_context)
+        ctx['account_ids'] = account_ids
+        ctx['partner_ids'] = filters.get('partner_ids', [])
+        ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
+        ctx['active_model'] = 'account.account'
+        ctx['active_ids'] = accounts.ids
+
+        _logger.info("Calling GL _get_report_values")
+        result = report_model.with_context(ctx)._get_report_values([], data)
+
+        accounts_data = result.get('Accounts', [])
+        # Compute quick totals
+        total_debit = sum(a.get('debit', 0.0) for a in accounts_data)
+        total_credit = sum(a.get('credit', 0.0) for a in accounts_data)
+        total_balance = sum(a.get('balance', 0.0) for a in accounts_data)
+
+        response = {
+            'accounts': accounts_data,
+            'totals': {
+                'debit': total_debit,
+                'credit': total_credit,
+                'balance': total_balance,
+            },
+            'company': request.env.company.name,
+            'currency_symbol': request.env.company.currency_id.symbol,
+            'date_from': filters.get('date_from'),
+            'date_to': filters.get('date_to'),
+        }
+        _logger.info(f"GL response accounts={len(accounts_data)}")
+        return response
 
     def _get_partner_ledger_data(self, filters):
-        """Get Partner Ledger report data - placeholder for future implementation."""
-        return {'error': 'Partner Ledger interactive report not yet implemented'}
+        """Get Partner Ledger report data using existing report model."""
+        _logger.info(f"_get_partner_ledger_data called with filters: {filters}")
+        report_model = request.env['report.mhj_account_reports.report_partnerledger']
+
+        used_context = {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+
+        partner_ids = filters.get('partner_ids') or []
+        if partner_ids:
+            partners = request.env['res.partner'].browse(partner_ids)
+        else:
+            partners = request.env['res.partner'].search([])
+        _logger.info(f"Partner ledger partners: {len(partners)} (filtered={bool(partner_ids)})")
+
+        data = {
+            'form': {
+                'date_from': filters.get('date_from'),
+                'date_to': filters.get('date_to'),
+                'target_move': filters.get('state', 'posted'),
+                'result_selection': filters.get('result_selection', 'customer'),
+                'partner_ids': partner_ids,
+                'journal_ids': filters.get('journal_ids', []),
+                'reconciled': filters.get('reconciled', False),
+                'amount_currency': filters.get('amount_currency', False),
+                'initial_balance': filters.get('initial_balance', True),
+                'used_context': used_context,
+                'company_id': [request.env.company.id, request.env.company.name],
+            },
+            'model': 'res.partner',
+            'ids': partners.ids,
+        }
+
+        ctx = dict(request.env.context, **used_context)
+        ctx['partner_ids'] = partner_ids
+        ctx['active_model'] = 'res.partner'
+        ctx['active_ids'] = partners.ids
+
+        # Let report build computed settings (account types, move_state)
+        report_model.with_context(ctx)._get_report_values([], data)
+
+        partner_rows = []
+        for partner in partners:
+            lines = report_model.with_context(ctx)._lines(data['form'], partner)
+            init_bal = report_model.get_partner_initial_balance_safe(data, partner, data['form'].get('date_from'))
+            total_debit = init_bal.get('debit', 0.0) + sum(l.get('debit', 0.0) for l in lines)
+            total_credit = init_bal.get('credit', 0.0) + sum(l.get('credit', 0.0) for l in lines)
+            total_balance = init_bal.get('balance', 0.0) + sum(l.get('debit', 0.0) - l.get('credit', 0.0) for l in lines)
+            partner_rows.append({
+                'id': partner.id,
+                'name': partner.name,
+                'ref': partner.ref,
+                'initial_balance': init_bal,
+                'lines': lines,
+                'total_debit': total_debit,
+                'total_credit': total_credit,
+                'total_balance': total_balance,
+            })
+
+        response = {
+            'partners': partner_rows,
+            'company': request.env.company.name,
+            'currency_symbol': request.env.company.currency_id.symbol,
+            'date_from': filters.get('date_from'),
+            'date_to': filters.get('date_to'),
+        }
+        _logger.info(f"Partner ledger response partners={len(partner_rows)}")
+        return response
 
     def _get_cash_flow_data(self, filters):
-        """Get Cash Flow report data - placeholder for future implementation."""
-        return {'error': 'Cash Flow interactive report not yet implemented'}
+        """Get Cash Flow report data using existing report model."""
+        _logger.info(f"_get_cash_flow_data called with filters: {filters}")
+        report_model = request.env['report.mhj_account_reports.report_cash_flow']
+
+        used_context = {
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+
+        data = {
+            'form': {
+                'date_from': filters.get('date_from'),
+                'date_to': filters.get('date_to'),
+                'target_move': filters.get('state', 'posted'),
+                'used_context': used_context,
+                'company_id': [request.env.company.id, request.env.company.name],
+            },
+            'model': 'account.cash.flow.wizard',
+            'ids': [],
+        }
+
+        ctx = dict(request.env.context, **used_context)
+        ctx['active_model'] = 'account.cash.flow.wizard'
+        ctx['active_ids'] = []
+
+        result = report_model.with_context(ctx)._get_report_values([], data)
+
+        response = {
+            'company': result.get('company').name if result.get('company') else request.env.company.name,
+            'currency_symbol': result.get('currency').symbol if result.get('currency') else request.env.company.currency_id.symbol,
+            'date_from': filters.get('date_from'),
+            'date_to': filters.get('date_to'),
+            'operating': result.get('operating_activities', {}),
+            'net_operating': result.get('net_operating'),
+            'investing': result.get('investing_activities', {}),
+            'net_investing': result.get('net_investing'),
+            'financing': result.get('financing_activities', {}),
+            'net_financing': result.get('net_financing'),
+            'unclassified': result.get('unclassified'),
+            'beginning_cash': result.get('beginning_cash'),
+            'ending_cash': result.get('ending_cash'),
+            'actual_net_change': result.get('actual_net_change'),
+        }
+        _logger.info("Cash flow response ready")
+        return response
