@@ -97,12 +97,12 @@ class ReportCashFlow(models.AbstractModel):
         if receivables_change != 0:
             activities['(Increase)/Decrease in Accounts Receivable'] = -receivables_change
         
-        # Changes in inventory (current assets excluding receivables)
-        inventory_change = self._get_balance_change(
+        # Changes in direct cost (current assets excluding receivables)
+        direct_cost_change = self._get_balance_change(
             date_from, date_to, ['asset_current'], company_id
         )
-        if inventory_change != 0 and inventory_change != receivables_change:
-            activities['(Increase)/Decrease in Inventory'] = -inventory_change
+        if direct_cost_change != 0 and direct_cost_change != receivables_change:
+            activities['(Increase)/Decrease in Direct Cost'] = -direct_cost_change
         
         # Changes in accounts payable
         payables_change = self._get_balance_change(
