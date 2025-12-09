@@ -107,6 +107,7 @@ class ReportTrialBalance(models.AbstractModel):
                                             'debit', 'credit', 'balance',
                                             'end_debit', 'end_credit', 'end_balance'])
             currency = account.currency_id or self.env.company.currency_id
+            res['id'] = account.id
             res['code'] = account.code
             res['name'] = account.name
             
