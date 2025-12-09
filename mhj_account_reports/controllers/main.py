@@ -94,9 +94,13 @@ class AccountingReportsController(http.Controller):
             'company_id': request.env.company.id,
         }
         
-        # Search all accounts for trial balance (report will filter via context)
-        accounts = request.env['account.account'].search([])
-        _logger.info(f"Found {len(accounts)} accounts to process")
+        # Select accounts based on filter (fallback to all)
+        account_ids = filters.get('account_ids') or []
+        if account_ids:
+            accounts = request.env['account.account'].browse(account_ids)
+        else:
+            accounts = request.env['account.account'].search([])
+        _logger.info(f"Found {len(accounts)} accounts to process (filtered={bool(account_ids)})")
         
         # Build data structure expected by existing _get_report_values
         data = {
@@ -106,7 +110,7 @@ class AccountingReportsController(http.Controller):
                 'target_move': filters.get('state', 'posted'),
                 'display_account': filters.get('display_account', 'all'),
                 'journal_ids': filters.get('journal_ids', []),
-                'account_ids': filters.get('account_ids', []),
+                'account_ids': account_ids,
                 'analytic_account_ids': filters.get('analytic_account_ids', []),
                 'used_context': used_context,
                 'company_id': [request.env.company.id, request.env.company.name],
@@ -118,12 +122,12 @@ class AccountingReportsController(http.Controller):
         # Set context with all the filter values
         _logger.info(f"Setting context: {used_context}")
         ctx = dict(request.env.context, **used_context)
-        ctx['account_ids'] = filters.get('account_ids', [])
+        ctx['account_ids'] = account_ids
         ctx['partner_ids'] = filters.get('partner_ids', [])
         ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
         # Add active_model and active_ids (required by report model)
         ctx['active_model'] = 'account.account'
-        ctx['active_ids'] = accounts.ids  # Pass all account IDs
+        ctx['active_ids'] = accounts.ids  # Pass selected/all account IDs
         
         _logger.info(f"Calling report _get_report_values with {len(accounts)} accounts")
         # Call existing report method with proper context
