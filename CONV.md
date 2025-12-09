@@ -238,19 +238,50 @@ MOVE_LINE_LIMIT = 50000  # per account
 ### Completed ✅
 - Deep code analysis of legacy + dynamic reports
 - Reviewed dynamic reports frontend design
-- Trial Balance dynamic report **FIXED** - data display issue resolved
+- Trial Balance dynamic report **FIXED** - data display issue resolved (formatNumber calls)
 - Created comprehensive implementation roadmap
 
-### Issue Fixed: Trial Balance Not Displaying Data
-**Problem**: Template was calling `formatNumber()` without `this.` prefix
-- OWL templates require `this.` to access instance methods
-- Fixed 16 occurrences: 8 in tbody + 8 in tfoot
-- Data binding now correctly calls `this.formatNumber()` for number formatting
+### Current Issue: Trial Balance Not Showing Data
+**Investigation in Progress** - Added extensive debugging to track data flow:
+
+**Client-Side Debugging** (financial_reports.js):
+```javascript
+loadFilterData() → logs filter data received
+loadReport() → logs report type, filters sent, and response received
+```
+
+**Server-Side Debugging** (controllers/main.py):
+```python
+get_report_data() → logs report type and filters
+_get_trial_balance_data() → logs data transformation steps
+Response → logs account count before returning
+```
+
+**Template Debugging** (financial_reports_templates.xml):
+```xml
+<!-- Shows:
+  - Loading state (true/false)
+  - Has data (true/false)
+  - Constructor name (should be 'TrialBalanceReport')
+  - Content template validation
+-->
+```
+
+**To Debug**: 
+1. Open browser console (F12) and check for logs
+2. Check Odoo server logs for controller logs
+3. Verify:
+   - RPC response contains `accounts` array with data
+   - `state.reportData` is populated after RPC call
+   - Template rendering condition `state.reportData` is true
+   - `constructor.contentTemplate` is properly defined
 
 ### Next Steps
-- Implement OWL components for remaining 8 reports
-- Test Trial Balance with actual data
-- Begin General Ledger interactive component
+- Review logs to identify where data flow breaks
+- Check if report model is returning empty results
+- Verify RPC parameter passing (report_type string)
+
+
 
 ---
 

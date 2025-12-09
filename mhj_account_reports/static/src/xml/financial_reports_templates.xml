@@ -137,6 +137,17 @@
     <!-- Trial Balance Content -->
     <t t-name="mhj_account_reports.TrialBalanceReportContent">
         <div class="mhj_financial_report">
+            <!-- Debug: Show what data we have -->
+            <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc; font-size: 11px; font-family: monospace;">
+                <strong>DEBUG INFO:</strong><br/>
+                Has reportData: <t t-esc="!!state.reportData"/><br/>
+                reportData keys: <t t-esc="state.reportData ? Object.keys(state.reportData).join(', ') : 'N/A'"/><br/>
+                Accounts array length: <t t-esc="state.reportData?.accounts?.length || 0"/><br/>
+                Has totals: <t t-esc="!!state.reportData?.totals"/><br/>
+                <t t-if="state.reportData?.accounts?.length &gt; 0">
+                    First account: <t t-esc="JSON.stringify(state.reportData.accounts[0])"/>
+                </t>
+            </div>
             <t t-if="state.reportData">
                 <!-- Report Header Card -->
                 <div class="card mb-4">
@@ -205,8 +216,10 @@
                 </div>
             </t>
             <t t-else="">
-                <div class="alert alert-info">
-                    <i class="fa fa-info-circle"/> No data available. Please adjust your filters and try again.
+                <div class="alert alert-warning">
+                    <strong>No Data Available</strong><br/>
+                    reportData is null or undefined<br/>
+                    state.reportData = <t t-esc="state.reportData"/>
                 </div>
             </t>
         </div>

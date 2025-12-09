@@ -97,13 +97,20 @@ export class FinancialReportBase extends Component {
             });
             
             console.log('RPC Response received:', result);
+            console.log('Response keys:', result ? Object.keys(result) : 'null');
+            console.log('Response type:', typeof result);
+            console.log('Has accounts:', result ? result.accounts : 'N/A');
+            console.log('Accounts count:', result?.accounts?.length || 0);
+            if (result?.accounts?.length > 0) {
+                console.log('First account:', result.accounts[0]);
+            }
             
             if (result.error) {
                 this.notification.add("Error: " + result.error, { type: "danger" });
                 this.state.reportData = null;
             } else {
                 this.state.reportData = result || null;
-                console.log('Report data set:', this.state.reportData);
+                console.log('Report data set to state:', this.state.reportData);
             }
         } catch (error) {
             this.notification.add("Failed to load report data: " + (error.message || error), { type: "danger" });
