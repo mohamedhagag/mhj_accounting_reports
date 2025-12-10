@@ -283,6 +283,10 @@ export class FinancialReportBase extends Component {
                     size: A4;
                     margin: 12mm;
                 }
+                 @page landscape {
+                    size: A4;
+                    margin: 12mm;
+                }
                 @media print {
                     body { margin: 0; padding: 0; }
                     .o_web_client, .o_form_view, .o_list_view { background: white !important; }
