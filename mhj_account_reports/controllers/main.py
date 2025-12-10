@@ -494,7 +494,7 @@ class AccountingReportsController(http.Controller):
         ctx['active_ids'] = [balance_sheet.id]
 
         result = report_model.with_context(ctx)._get_report_values([], data)
-        lines = result.get('get_account_lines') or result.get('lines') or [] if result else []
+        lines = (result.get('get_account_lines') or result.get('lines') or []) if result else []
 
         response = {
             'lines': lines,
