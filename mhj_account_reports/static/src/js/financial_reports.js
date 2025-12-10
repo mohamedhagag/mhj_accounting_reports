@@ -313,4 +313,24 @@ export class FinancialReportBase extends Component {
             // Silently fail - don't break the view
         }
     }
+
+    getAssetLines() {
+        // Default fallback for Balance Sheet - return asset lines from reportData
+        if (this.state?.reportData?.assets) {
+            return this.state.reportData.assets;
+        }
+        return [];
+    }
+
+    getLiabilityLines() {
+        // Default fallback for Balance Sheet - return liability lines from reportData
+        if (this.state?.reportData?.liabilities) {
+            return this.state.reportData.liabilities;
+        }
+        return [];
+    }
+
+    getLineIndent(level) {
+        return (level || 0) * 20;
+    }
 }
