@@ -278,7 +278,6 @@ class AccountingReportsController(http.Controller):
             partners = request.env['res.partner'].browse(partner_ids)
         else:
             partners = request.env['res.partner'].search([])
-        _logger.info(f"Partner ledger partners: {len(partners)} (filtered={bool(partner_ids)})")
 
         data = {
             'form': {
@@ -304,7 +303,22 @@ class AccountingReportsController(http.Controller):
         ctx['active_ids'] = partners.ids
 
         # Let report build computed settings (account types, move_state)
-        report_model.with_context(ctx)._get_report_values([], data)
+        report_result = report_model.with_context(ctx)._get_report_values([], data)
+
+        # Use partner list as determined by report (ensures only partners with activity are included)
+        if report_result and report_result.get('doc_ids'):
+            partner_ids = report_result.get('doc_ids')
+            partners = request.env['res.partner'].browse(partner_ids)
+        elif report_result and report_result.get('docs'):
+            partners = report_result.get('docs')
+            partner_ids = partners.ids
+
+        # Keep payload/context in sync with resolved partners
+        data['ids'] = partner_ids
+        data['form']['partner_ids'] = partner_ids
+        ctx['active_ids'] = partner_ids
+
+        _logger.info(f"Partner ledger partners: {len(partners)} (filtered={bool(filters.get('partner_ids'))})")
 
         partner_rows = []
         for partner in partners:
