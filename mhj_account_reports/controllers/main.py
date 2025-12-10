@@ -108,6 +108,7 @@ class AccountingReportsController(http.Controller):
             'date_to': filters.get('date_to') or False,
             'strict_range': True if filters.get('date_from') else False,
             'company_id': request.env.company.id,
+            'initial_balance': filters.get('initial_balance', True),
         }
         
         # Select accounts based on filter (fallback to all)
@@ -128,6 +129,7 @@ class AccountingReportsController(http.Controller):
                 'journal_ids': filters.get('journal_ids', []),
                 'account_ids': account_ids,
                 'analytic_account_ids': filters.get('analytic_account_ids', []),
+                'initial_balance': filters.get('initial_balance', True),
                 'used_context': used_context,
                 'company_id': [request.env.company.id, request.env.company.name],
             },
