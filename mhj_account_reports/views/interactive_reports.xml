@@ -35,7 +35,7 @@
     <menuitem id="menu_interactive_reports_root"
               name="Interactive Reports"
               sequence="0"
-              parent="menu_finance_audit_reports"
+              parent="menu_finance_pdf_reports"
               groups="account.group_account_manager,account.group_account_user"/>
 
     <!-- Menu Item for Interactive Trial Balance -->
