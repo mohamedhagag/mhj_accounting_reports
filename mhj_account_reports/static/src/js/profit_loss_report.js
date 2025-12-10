@@ -147,5 +147,3 @@ export class ProfitLossReport extends FinancialReportBase {
 }
 
 registry.category("actions").add("mhj_profit_loss_interactive", ProfitLossReport);
-
-registry.category("actions").add("mhj_profit_loss_interactive", ProfitLossReport);
