@@ -142,9 +142,15 @@ export class FinancialReportBase extends Component {
 
     getVisibleAccounts(accounts = []) {
         const mode = this.state.filters?.display_account || 'all';
+        const selectedAccountIds = this.state.filters?.account_ids || [];
 
         // Apply extra client-side filtering on top of server-side filtering
         return accounts.filter((acc) => {
+            // If specific accounts are selected, show only those
+            if (selectedAccountIds.length > 0) {
+                return selectedAccountIds.includes(acc.id);
+            }
+
             const debit = acc.debit || 0;
             const credit = acc.credit || 0;
             const balance = acc.balance || 0;
@@ -164,6 +170,18 @@ export class FinancialReportBase extends Component {
             // 'all': show everything
             return true;
         });
+    }
+
+    getVisiblePartners(partners = []) {
+        const selectedPartnerIds = this.state.filters?.partner_ids || [];
+
+        // If specific partners are selected, show only those
+        if (selectedPartnerIds.length > 0) {
+            return partners.filter((partner) => selectedPartnerIds.includes(partner.id));
+        }
+
+        // Show all partners if none selected
+        return partners;
     }
 
     async applyFilters() {

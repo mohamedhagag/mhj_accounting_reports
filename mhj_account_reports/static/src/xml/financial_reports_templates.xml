@@ -480,7 +480,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="state.reportData.partners" t-as="partner" t-key="partner.id || partner_index">
+                                    <t t-foreach="this.getVisiblePartners(state.reportData.partners || [])" t-as="partner" t-key="partner.id || partner_index">
                                         <tr class="table-primary" t-on-click="() => this.togglePartner(partner.id)">
                                             <td class="toggle-cell">
                                                 <i class="fa" t-att-class="this.isExpanded(partner.id) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
