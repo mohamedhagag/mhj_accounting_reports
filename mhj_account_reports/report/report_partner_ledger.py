@@ -161,7 +161,7 @@ class ReportPartnerLedger(models.AbstractModel):
 
     def _get_partner_initial_balance(self, data, partner, date_from):
         """
-        Calculate initial balance for a partner before the date_from
+        Calculate initial balance for a partner before the date_from using proper context
         """
         # Always return a default dictionary structure
         default_result = {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
@@ -175,22 +175,33 @@ class ReportPartnerLedger(models.AbstractModel):
                 _logger.warning("No account_ids in computed data for partner %s", partner.name)
                 return default_result
             
-            # Use a simple query without query_get to avoid date filtering issues
+            # Use context from form with modified date_to to get initial balance before date_from
+            AML = self.env['account.move.line']
+            ctx = dict(data['form'].get('used_context', {}))
+            ctx['date_to'] = date_from  # Set date_to to day before date_from
+            ctx['date_from'] = False    # No start date - get all entries before date_to
+            ctx['initial_bal'] = True   # Mark as initial balance query
+            
+            query_get_data = AML.with_context(ctx)._query_get()
             reconcile_clause = "" if data['form']['reconciled'] else ' AND aml.full_reconcile_id IS NULL '
             
-            # Simple direct query for initial balance
+            # Use query_get to respect all context filters
             params = [partner.id, tuple(data['computed']['move_state']), 
-                     tuple(data['computed']['account_ids']), date_from]
+                     tuple(data['computed']['account_ids'])] + query_get_data[2]
             
             query = """SELECT COALESCE(SUM(aml.debit), 0.0) as initial_debit,
                               COALESCE(SUM(aml.credit), 0.0) as initial_credit,
                               COALESCE(SUM(aml.debit - aml.credit), 0.0) as initial_balance
-                    FROM account_move_line aml
+                    FROM """ + query_get_data[0] + """
                     JOIN account_move am ON (am.id = aml.move_id)
                     WHERE aml.partner_id = %s
                         AND am.state IN %s
                         AND aml.account_id IN %s
-                        AND aml.date < %s""" + reconcile_clause
+                        AND aml.date < %s
+                        AND """ + query_get_data[1] + reconcile_clause
+            
+            # Add the date filter
+            params.insert(3, date_from)
                         
             self.env.cr.execute(query, tuple(params))
             
