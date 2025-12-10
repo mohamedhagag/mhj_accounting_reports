@@ -607,13 +607,13 @@
                                         <tbody>
                                             <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
                                                 <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
-                                                <t t-set="isAssetLine" t-value="lineName.includes('asset') or (line.level === 1 and (line.parent_index || -1) &lt; 0)"/>
-                                                <t t-if="isAssetLine and lineName === 'assets'">
+                                                <t t-set="isAssetLine" t-value="lineName.includes('asset') || (line.level === 1 &amp;&amp; (line.parent_index || -1) &lt; 0)"/>
+                                                <t t-if="isAssetLine &amp;&amp; lineName === 'assets'">
                                                     <tr>
                                                         <td colspan="2"></td>
                                                     </tr>
                                                 </t>
-                                                <t t-if="not (lineName.includes('liability') or lineName.includes('liabilities') or lineName.includes('profit') or lineName.includes('loss') or lineName.includes('expense') or lineName.includes('income'))">
+                                                <t t-if="!(lineName.includes('liability') || lineName.includes('liabilities') || lineName.includes('profit') || lineName.includes('loss') || lineName.includes('expense') || lineName.includes('income'))">
                                                     <tr>
                                                         <td>
                                                             <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
@@ -642,7 +642,7 @@
                                         <tbody>
                                             <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
                                                 <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
-                                                <t t-if="lineName.includes('liability') or lineName.includes('liabilities') or lineName.includes('equity') or lineName.includes('profit') or lineName.includes('loss')">
+                                                <t t-if="lineName.includes('liability') || lineName.includes('liabilities') || lineName.includes('equity') || lineName.includes('profit') || lineName.includes('loss')">
                                                     <tr>
                                                         <td>
                                                             <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
