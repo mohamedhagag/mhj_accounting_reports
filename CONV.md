@@ -235,6 +235,12 @@ MOVE_LINE_LIMIT = 50000  # per account
 
 ## Session Status - OWL Migration & Trial Balance Debugging ✅ FIXED
 
+### Latest Updates (Backend)
+- Added JSON endpoints for `general_ledger`, `partner_ledger`, and `cash_flow` in `controllers/main.py`, reusing existing report models
+- Trial Balance endpoint now respects `account_ids` filter and returns active_ids
+- Debug panel is wrapped in `env.debug` to stay hidden in production; scroll layout fixed (100vh/flex/min-height:0)
+- Pending: Frontend OWL components/templates for General Ledger, Partner Ledger, Cash Flow to consume the new endpoints
+
 ### Completed ✅
 - Deep code analysis of legacy + dynamic reports
 - Reviewed dynamic reports frontend design

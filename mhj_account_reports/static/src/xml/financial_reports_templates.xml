@@ -107,6 +107,56 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label>Partners</label>
+                            <input type="text" class="form-control" placeholder="Search partners..."
+                                   t-model="state.filterText.partners"
+                                   t-on-input="() => this.filterItems('partners')"/>
+                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
+                                <t t-foreach="state.filteredPartners" t-as="partner" t-key="partner.id || partner_index">
+                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
+                                       t-on-click.prevent="() => this.toggleItem('partner_ids', partner.id, partner.name)">
+                                        <t t-if="state.filters.partner_ids?.includes(partner.id)">
+                                            <i class="fa fa-check-square-o text-success"/>
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-square-o text-muted"/>
+                                        </t>
+                                        <t t-esc="partner.name"/>
+                                    </a>
+                                </t>
+                            </div>
+                            <div t-if="state.filters.partner_ids?.length > 0" class="mt-2">
+                                <small class="text-muted">Selected: <t t-esc="state.filters.partner_ids.length"/></small>
+                                <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('partner_ids')">Clear</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Analytic Accounts</label>
+                            <input type="text" class="form-control" placeholder="Search analytics..."
+                                   t-model="state.filterText.analytics"
+                                   t-on-input="() => this.filterItems('analytics')"/>
+                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
+                                <t t-foreach="state.filteredAnalytics" t-as="analytic" t-key="analytic.id || analytic_index">
+                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
+                                       t-on-click.prevent="() => this.toggleItem('analytic_account_ids', analytic.id, analytic.name)">
+                                        <t t-if="state.filters.analytic_account_ids?.includes(analytic.id)">
+                                            <i class="fa fa-check-square-o text-success"/>
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-square-o text-muted"/>
+                                        </t>
+                                        <t t-esc="analytic.name"/>
+                                    </a>
+                                </t>
+                            </div>
+                            <div t-if="state.filters.analytic_account_ids?.length > 0" class="mt-2">
+                                <small class="text-muted">Selected: <t t-esc="state.filters.analytic_account_ids.length"/></small>
+                                <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('analytic_account_ids')">Clear</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </t>
 
@@ -240,6 +290,235 @@
                     reportData is null or undefined<br/>
                     state.reportData = <t t-esc="state.reportData"/>
                 </div>
+            </t>
+        </div>
+    </t>
+
+    <!-- General Ledger Content -->
+    <t t-name="mhj_account_reports.GeneralLedgerReportContent">
+        <div class="mhj_financial_report">
+            <t t-if="state.reportData">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>General Ledger</h3>
+                        <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 32px;"></th>
+                                        <th>Code / Date</th>
+                                        <th>Account / Journal</th>
+                                        <th>Label</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportData.accounts" t-as="account" t-key="account.id || account.code || account_index">
+                                        <tr class="table-primary" t-on-click="() => this.toggleAccount(account.id || account.code)">
+                                            <td class="toggle-cell">
+                                                <i class="fa" t-att-class="this.isExpanded(account.id || account.code) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                            </td>
+                                            <td><t t-esc="account.code"/></td>
+                                            <td><t t-esc="account.name"/></td>
+                                            <td></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.debit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.balance)"/></td>
+                                        </tr>
+                                        <t t-if="this.isExpanded(account.id || account.code)">
+                                            <t t-foreach="account.move_lines || []" t-as="line" t-key="line.lid || line.id || line.ldate || line_index">
+                                                <tr class="account-line">
+                                                    <td></td>
+                                                    <td><t t-esc="line.ldate"/></td>
+                                                    <td><t t-esc="line.lcode"/></td>
+                                                    <td><t t-esc="line.lname || line.lref || line.move_name"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.debit)"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.credit)"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.balance)"/></td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </tbody>
+                                <tfoot class="table-dark fw-bold">
+                                    <tr>
+                                        <td colspan="4">TOTAL</td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.debit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.balance)"/></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="alert alert-warning">No data available for the selected filters.</div>
+            </t>
+        </div>
+    </t>
+
+    <!-- Partner Ledger Content -->
+    <t t-name="mhj_account_reports.PartnerLedgerReportContent">
+        <div class="mhj_financial_report">
+            <t t-if="state.reportData">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Partner Ledger</h3>
+                        <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 32px;"></th>
+                                        <th>Partner / Line</th>
+                                        <th class="text-end">Initial / Date</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportData.partners" t-as="partner" t-key="partner.id || partner_index">
+                                        <tr class="table-primary" t-on-click="() => this.togglePartner(partner.id)">
+                                            <td class="toggle-cell">
+                                                <i class="fa" t-att-class="this.isExpanded(partner.id) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                            </td>
+                                            <td><t t-esc="partner.name"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(partner.initial_balance?.balance)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(partner.total_debit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(partner.total_credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(partner.total_balance)"/></td>
+                                        </tr>
+                                        <t t-if="this.isExpanded(partner.id)">
+                                            <t t-foreach="partner.lines || []" t-as="line" t-key="line.id || line.date || line_index">
+                                                <tr class="account-line">
+                                                    <td></td>
+                                                    <td><t t-esc="line.displayed_name || line.name || line.ref"/></td>
+                                                    <td class="text-end"><t t-esc="line.date"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.debit)"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.credit)"/></td>
+                                                    <td class="text-end"><t t-esc="this.formatNumber(line.progress)"/></td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="alert alert-warning">No data available for the selected filters.</div>
+            </t>
+        </div>
+    </t>
+
+    <!-- Cash Flow Content -->
+    <t t-name="mhj_account_reports.CashFlowReportContent">
+        <div class="mhj_financial_report">
+            <t t-if="state.reportData">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Cash Flow Statement</h3>
+                        <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">Operating Activities</div>
+                            <div class="card-body">
+                                <t t-foreach="Object.entries(state.reportData.operating || {})" t-as="item" t-key="item[0]">
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span><t t-esc="item[0]"/></span>
+                                        <span class="text-end fw-bold"><t t-esc="this.formatNumber(item[1])"/></span>
+                                    </div>
+                                </t>
+                                <div class="d-flex justify-content-between mt-3 fw-bold">
+                                    <span>Net Operating Cash</span>
+                                    <span><t t-esc="this.formatNumber(state.reportData.net_operating)"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">Investing Activities</div>
+                            <div class="card-body">
+                                <t t-foreach="Object.entries(state.reportData.investing || {})" t-as="item" t-key="item[0]">
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span><t t-esc="item[0]"/></span>
+                                        <span class="text-end fw-bold"><t t-esc="this.formatNumber(item[1])"/></span>
+                                    </div>
+                                </t>
+                                <div class="d-flex justify-content-between mt-3 fw-bold">
+                                    <span>Net Investing Cash</span>
+                                    <span><t t-esc="this.formatNumber(state.reportData.net_investing)"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">Financing Activities</div>
+                            <div class="card-body">
+                                <t t-foreach="Object.entries(state.reportData.financing || {})" t-as="item" t-key="item[0]">
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <span><t t-esc="item[0]"/></span>
+                                        <span class="text-end fw-bold"><t t-esc="this.formatNumber(item[1])"/></span>
+                                    </div>
+                                </t>
+                                <div class="d-flex justify-content-between mt-3 fw-bold">
+                                    <span>Net Financing Cash</span>
+                                    <span><t t-esc="this.formatNumber(state.reportData.net_financing)"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="fw-bold">Beginning Cash</div>
+                                <div><t t-esc="this.formatNumber(state.reportData.beginning_cash)"/></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="fw-bold">Ending Cash</div>
+                                <div><t t-esc="this.formatNumber(state.reportData.ending_cash)"/></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="fw-bold">Actual Net Change</div>
+                                <div><t t-esc="this.formatNumber(state.reportData.actual_net_change)"/></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="fw-bold">Computed Net Cash</div>
+                                <div><t t-esc="this.formatNumber((state.reportData.net_operating || 0) + (state.reportData.net_investing || 0) + (state.reportData.net_financing || 0))"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="alert alert-warning">No data available for the selected filters.</div>
             </t>
         </div>
     </t>
