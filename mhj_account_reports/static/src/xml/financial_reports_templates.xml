@@ -49,7 +49,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label>Display Account</label>
+                            <label>Display Accounts</label>
                             <select class="form-control" t-model="state.filters.display_account">
                                 <option value="all">All Accounts</option>
                                 <option value="movement">With Movements</option>
