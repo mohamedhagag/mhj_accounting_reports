@@ -57,6 +57,7 @@
             "mhj_account_reports/static/src/js/partner_ledger_report.js",
             "mhj_account_reports/static/src/js/cash_flow_report.js",
             "mhj_account_reports/static/src/js/balance_sheet_report.js",
+            "mhj_account_reports/static/src/js/profit_loss_report.js",
             # XML Templates
             "mhj_account_reports/static/src/xml/financial_reports_templates.xml",
             # Styles
