@@ -10,10 +10,19 @@ _logger = logging.getLogger(__name__)
 class AccountingReportsController(http.Controller):
     """Controller for interactive accounting reports."""
 
+    def _resolve_journal_ids(self, filters):
+        """Return provided journal_ids or all company journals if none supplied."""
+        journal_ids = filters.get('journal_ids') if filters else []
+        if journal_ids:
+            return journal_ids
+        company = request.env.company
+        return request.env['account.journal'].search([('company_id', '=', company.id)]).ids
+
     def _build_used_context(self, filters):
         """Mirror wizard context so date_from/initial balance logic matches PDF reports."""
+        journal_ids = self._resolve_journal_ids(filters)
         return {
-            'journal_ids': filters.get('journal_ids') or False,
+            'journal_ids': journal_ids or False,
             'state': filters.get('state', 'posted'),
             'date_from': filters.get('date_from') or False,
             'date_to': filters.get('date_to') or False,
@@ -99,10 +108,11 @@ class AccountingReportsController(http.Controller):
         """Get Trial Balance report data using existing report model."""
         _logger.info(f"_get_trial_balance_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_trialbalance']
+        journal_ids = self._resolve_journal_ids(filters)
         
         # Build proper context like the wizard does
         used_context = {
-            'journal_ids': filters.get('journal_ids') or False,
+            'journal_ids': journal_ids or False,
             'state': filters.get('state', 'posted'),
             'date_from': filters.get('date_from') or False,
             'date_to': filters.get('date_to') or False,
@@ -127,7 +137,7 @@ class AccountingReportsController(http.Controller):
                 'target_move': filters.get('state', 'posted'),
                 # Default to 'movement' to match wizard behavior
                 'display_account': filters.get('display_account', 'movement'),
-                'journal_ids': filters.get('journal_ids', []),
+                'journal_ids': journal_ids,
                 'account_ids': account_ids,
                 'analytic_account_ids': filters.get('analytic_account_ids', []),
                 'initial_balance': filters.get('initial_balance', True),
@@ -236,6 +246,7 @@ class AccountingReportsController(http.Controller):
 
         # Context similar to wizard
         used_context = self._build_used_context(filters)
+        journal_ids = used_context.get('journal_ids') or []
 
         # Accounts: respect selection if provided
         account_ids = filters.get('account_ids') or []
@@ -252,7 +263,7 @@ class AccountingReportsController(http.Controller):
                 'date_to': filters.get('date_to'),
                 'target_move': filters.get('state', 'posted'),
                 'display_account': filters.get('display_account', 'all'),
-                'journal_ids': filters.get('journal_ids', []),
+                'journal_ids': journal_ids,
                 'account_ids': account_ids,
                 'analytic_account_ids': filters.get('analytic_account_ids', []),
                 'partner_ids': filters.get('partner_ids', []),
@@ -312,6 +323,7 @@ class AccountingReportsController(http.Controller):
         report_model = request.env['report.mhj_account_reports.report_partnerledger']
 
         used_context = self._build_used_context(filters)
+        journal_ids = used_context.get('journal_ids') or []
 
         partner_ids = filters.get('partner_ids') or []
         if partner_ids:
@@ -326,7 +338,7 @@ class AccountingReportsController(http.Controller):
                 'target_move': filters.get('state', 'posted'),
                 'result_selection': filters.get('result_selection', 'customer'),
                 'partner_ids': partner_ids,
-                'journal_ids': filters.get('journal_ids', []),
+                'journal_ids': journal_ids,
                 'reconciled': filters.get('reconciled', False),
                 'amount_currency': filters.get('amount_currency', False),
                 'initial_balance': filters.get('initial_balance', True),
@@ -400,12 +412,14 @@ class AccountingReportsController(http.Controller):
         """Get Cash Flow report data using existing report model."""
         _logger.info(f"_get_cash_flow_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_cash_flow']
+        journal_ids = self._resolve_journal_ids(filters)
 
         used_context = {
             'state': filters.get('state', 'posted'),
             'date_from': filters.get('date_from') or False,
             'date_to': filters.get('date_to') or False,
             'strict_range': True if filters.get('date_from') else False,
+            'journal_ids': journal_ids or False,
             'company_id': request.env.company.id,
         }
 
@@ -414,6 +428,7 @@ class AccountingReportsController(http.Controller):
                 'date_from': filters.get('date_from'),
                 'date_to': filters.get('date_to'),
                 'target_move': filters.get('state', 'posted'),
+                'journal_ids': journal_ids,
                 'used_context': used_context,
                 'company_id': [request.env.company.id, request.env.company.name],
             },
@@ -450,6 +465,7 @@ class AccountingReportsController(http.Controller):
         """Get Balance Sheet data using existing financial report model."""
         _logger.info(f"_get_balance_sheet_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_financial']
+        journal_ids = self._resolve_journal_ids(filters)
 
         # Locate the Balance Sheet financial report definition
         balance_sheet = request.env.ref('mhj_account_reports.account_financial_report_balancesheet0', raise_if_not_found=False)
@@ -460,7 +476,7 @@ class AccountingReportsController(http.Controller):
 
         # Balance Sheet should be computed as of date_to; keep date_from unset and strict_range False
         used_context = {
-            'journal_ids': filters.get('journal_ids') or False,
+            'journal_ids': journal_ids or False,
             'state': filters.get('state', 'posted'),
             'date_from': False,
             'date_to': filters.get('date_to') or False,
@@ -481,7 +497,7 @@ class AccountingReportsController(http.Controller):
                 'target_move': filters.get('state', 'posted'),
                 'date_from': False,
                 'date_to': filters.get('date_to'),
-                'journal_ids': filters.get('journal_ids', []),
+                'journal_ids': journal_ids,
                 'used_context': used_context,
             },
             'model': 'account.financial.report',
@@ -510,6 +526,7 @@ class AccountingReportsController(http.Controller):
         """Get Profit & Loss report data using existing financial report model."""
         _logger.info(f"_get_profit_loss_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_financial']
+        journal_ids = self._resolve_journal_ids(filters)
 
         # Locate the P&L financial report definition
         profit_loss = request.env.ref('mhj_account_reports.account_financial_report_pl0', raise_if_not_found=False)
@@ -519,7 +536,7 @@ class AccountingReportsController(http.Controller):
             return {'error': 'Profit & Loss definition not found'}
 
         used_context = {
-            'journal_ids': filters.get('journal_ids') or False,
+            'journal_ids': journal_ids or False,
             'state': filters.get('state', 'posted'),
             'date_from': filters.get('date_from') or False,
             'date_to': filters.get('date_to') or False,
@@ -540,7 +557,7 @@ class AccountingReportsController(http.Controller):
                 'target_move': filters.get('state', 'posted'),
                 'date_from': filters.get('date_from'),
                 'date_to': filters.get('date_to'),
-                'journal_ids': filters.get('journal_ids', []),
+                'journal_ids': journal_ids,
                 'used_context': used_context,
             },
             'model': 'account.financial.report',
