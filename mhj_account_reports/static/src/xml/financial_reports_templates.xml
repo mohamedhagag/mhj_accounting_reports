@@ -328,7 +328,7 @@
                                                 <td><t t-esc="account.name"/></td>
                                                 <td class="text-center">
                                                     <t t-if="account.id">
-                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], `${account.code || ''} ${account.name || ''}`)">Entries</button>
+                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">Entries</button>
                                                     </t>
                                                     <t t-else="">&#160;</t>
                                                 </td>
@@ -424,7 +424,7 @@
                                                 <td></td>
                                                 <td class="text-center">
                                                     <t t-if="account.id">
-                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], `${account.code || ''} ${account.name || ''}`)">Entries</button>
+                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">Entries</button>
                                                     </t>
                                                     <t t-else="">&#160;</t>
                                                 </td>

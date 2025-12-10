@@ -261,6 +261,15 @@ export class FinancialReportBase extends Component {
         });
     }
 
+    accountLabel(account) {
+        if (!account) {
+            return '';
+        }
+        const code = account.code || '';
+        const name = account.name || '';
+        return `${code} ${name}`.trim();
+    }
+
     async openDrilldown(scope, ids, name = 'Details', options = {}) {
         const targetIds = Array.isArray(ids) ? ids : [];
         if (!targetIds.length) {
