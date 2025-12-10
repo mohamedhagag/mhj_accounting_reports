@@ -310,9 +310,16 @@ export class FinancialReportBase extends Component {
                     <title>${reportTitle}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
+                        /* Paper size and margins - use browser defaults for flexibility */
                         @page {
+                            margin: 3mm;
+                            orphans: 2;
+                            widows: 2;
+                        }
+
+                        /* Landscape support - user can select in print dialog */
+                        @page landscape {
                             size: A4 landscape;
-                            margin: 12mm;
                         }
                         body {
                             font-family: Arial, Helvetica, sans-serif;
