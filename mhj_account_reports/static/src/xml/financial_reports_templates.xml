@@ -523,4 +523,49 @@
         </div>
     </t>
 
+    <!-- Balance Sheet Content -->
+    <t t-name="mhj_account_reports.BalanceSheetReportContent">
+        <div class="mhj_financial_report">
+            <t t-if="state.reportData">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Balance Sheet</h3>
+                        <p class="mb-0">As of <t t-esc="state.reportData.date_to || state.reportData.date_from"/></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Line</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
+                                        <tr>
+                                            <td>
+                                                <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" class="fw-bold" t-if="line.type == 'report'"></span>
+                                                <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-else=""></span>
+                                                <t t-esc="line.name"/>
+                                            </td>
+                                            <td class="text-end fw-bold" t-if="line.type == 'report'"><t t-esc="this.formatNumber(line.balance)"/></td>
+                                            <td class="text-end" t-else=""><t t-esc="this.formatNumber(line.balance)"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="alert alert-warning">No data available for the selected filters.</div>
+            </t>
+        </div>
+    </t>
+
 </templates>

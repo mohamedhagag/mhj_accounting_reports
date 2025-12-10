@@ -26,6 +26,8 @@ class AccountingReportsController(http.Controller):
                 return self._get_partner_ledger_data(filters)
             elif report_type == 'cash_flow':
                 return self._get_cash_flow_data(filters)
+            elif report_type == 'balance_sheet':
+                return self._get_balance_sheet_data(filters)
             else:
                 return {'error': 'Invalid report type'}
                 
@@ -396,4 +398,63 @@ class AccountingReportsController(http.Controller):
             'actual_net_change': result.get('actual_net_change'),
         }
         _logger.info("Cash flow response ready")
+        return response
+
+    def _get_balance_sheet_data(self, filters):
+        """Get Balance Sheet data using existing financial report model."""
+        _logger.info(f"_get_balance_sheet_data called with filters: {filters}")
+        report_model = request.env['report.mhj_account_reports.report_financial']
+
+        # Locate the Balance Sheet financial report definition
+        balance_sheet = request.env.ref('mhj_account_reports.account_financial_report_balancesheet0', raise_if_not_found=False)
+        if not balance_sheet:
+            balance_sheet = request.env['account.financial.report'].search([('name', 'ilike', 'Balance Sheet'), ('parent_id', '=', False)], limit=1)
+        if not balance_sheet:
+            return {'error': 'Balance Sheet definition not found'}
+
+        used_context = {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+
+        data = {
+            'form': {
+                'account_report_id': [balance_sheet.id, balance_sheet.name],
+                'enable_filter': False,
+                'label_filter': '',
+                'debit_credit': False,
+                'filter_cmp': 'filter_no',
+                'date_from_cmp': False,
+                'date_to_cmp': False,
+                'comparison_context': {},
+                'target_move': filters.get('state', 'posted'),
+                'date_from': filters.get('date_from'),
+                'date_to': filters.get('date_to'),
+                'journal_ids': filters.get('journal_ids', []),
+                'used_context': used_context,
+            },
+            'model': 'account.financial.report',
+            'ids': [balance_sheet.id],
+        }
+
+        ctx = dict(request.env.context, **used_context)
+        ctx['active_model'] = 'account.financial.report'
+        ctx['active_id'] = balance_sheet.id
+        ctx['active_ids'] = [balance_sheet.id]
+
+        result = report_model.with_context(ctx)._get_report_values([], data)
+        lines = result.get('get_account_lines', []) if result else []
+
+        response = {
+            'lines': lines,
+            'company': request.env.company.name,
+            'currency_symbol': request.env.company.currency_id.symbol,
+            'date_from': filters.get('date_from'),
+            'date_to': filters.get('date_to'),
+        }
+        _logger.info(f"Balance sheet lines: {len(lines)}")
         return response
