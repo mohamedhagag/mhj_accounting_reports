@@ -125,7 +125,8 @@ class AccountingReportsController(http.Controller):
                 'date_from': filters.get('date_from'),
                 'date_to': filters.get('date_to'),
                 'target_move': filters.get('state', 'posted'),
-                'display_account': filters.get('display_account', 'all'),
+                # Default to 'movement' to match wizard behavior
+                'display_account': filters.get('display_account', 'movement'),
                 'journal_ids': filters.get('journal_ids', []),
                 'account_ids': account_ids,
                 'analytic_account_ids': filters.get('analytic_account_ids', []),

@@ -61,6 +61,8 @@ export class FinancialReportBase extends Component {
             date_to: this.formatDate(today),
             state: 'posted',
             display_account: 'all',
+            // Align with wizard default: only accounts with movements
+            display_account: 'movement',
             initial_balance: true,
             sortby: 'sort_date',
             result_selection: 'customer',
