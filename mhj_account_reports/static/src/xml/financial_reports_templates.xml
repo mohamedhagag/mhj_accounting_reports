@@ -63,20 +63,6 @@
                             <input type="text" class="form-control" placeholder="Search journals..."
                                    t-model="state.filterText.journals"
                                    t-on-input="() => this.filterItems('journals')"/>
-                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredJournals" t-as="journal" t-key="journal.id || journal_index">
-                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
-                                       t-on-click.prevent="() => this.toggleItem('journal_ids', journal.id, journal.name)">
-                                        <t t-if="state.filters.journal_ids?.includes(journal.id)">
-                                            <i class="fa fa-check-square-o text-success"/>
-                                        </t>
-                                        <t t-else="">
-                                            <i class="fa fa-square-o text-muted"/>
-                                        </t>
-                                        <t t-esc="journal.code"/> - <t t-esc="journal.name"/>
-                                    </a>
-                                </t>
-                            </div>
                             <div t-if="state.filters.journal_ids?.length > 0" class="mt-2">
                                 <small class="text-muted">Selected: <t t-esc="state.filters.journal_ids.length"/></small>
                                 <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('journal_ids')">Clear</button>
@@ -87,20 +73,6 @@
                             <input type="text" class="form-control" placeholder="Search accounts..."
                                    t-model="state.filterText.accounts"
                                    t-on-input="() => this.filterItems('accounts')"/>
-                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredAccounts" t-as="account" t-key="account.id || account_index">
-                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
-                                       t-on-click.prevent="() => this.toggleItem('account_ids', account.id, account.code)">
-                                        <t t-if="state.filters.account_ids?.includes(account.id)">
-                                            <i class="fa fa-check-square-o text-success"/>
-                                        </t>
-                                        <t t-else="">
-                                            <i class="fa fa-square-o text-muted"/>
-                                        </t>
-                                        <t t-esc="account.code"/> - <t t-esc="account.name"/>
-                                    </a>
-                                </t>
-                            </div>
                             <div t-if="state.filters.account_ids?.length > 0" class="mt-2">
                                 <small class="text-muted">Selected: <t t-esc="state.filters.account_ids.length"/></small>
                                 <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('account_ids')">Clear</button>
@@ -113,20 +85,6 @@
                             <input type="text" class="form-control" placeholder="Search partners..."
                                    t-model="state.filterText.partners"
                                    t-on-input="() => this.filterItems('partners')"/>
-                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredPartners" t-as="partner" t-key="partner.id || partner_index">
-                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
-                                       t-on-click.prevent="() => this.toggleItem('partner_ids', partner.id, partner.name)">
-                                        <t t-if="state.filters.partner_ids?.includes(partner.id)">
-                                            <i class="fa fa-check-square-o text-success"/>
-                                        </t>
-                                        <t t-else="">
-                                            <i class="fa fa-square-o text-muted"/>
-                                        </t>
-                                        <t t-esc="partner.name"/>
-                                    </a>
-                                </t>
-                            </div>
                             <div t-if="state.filters.partner_ids?.length > 0" class="mt-2">
                                 <small class="text-muted">Selected: <t t-esc="state.filters.partner_ids.length"/></small>
                                 <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('partner_ids')">Clear</button>
@@ -137,20 +95,6 @@
                             <input type="text" class="form-control" placeholder="Search analytics..."
                                    t-model="state.filterText.analytics"
                                    t-on-input="() => this.filterItems('analytics')"/>
-                            <div class="list-group mt-2" style="max-height: 150px; overflow-y: auto;">
-                                <t t-foreach="state.filteredAnalytics" t-as="analytic" t-key="analytic.id || analytic_index">
-                                    <a href="#" class="list-group-item list-group-item-action p-2 small"
-                                       t-on-click.prevent="() => this.toggleItem('analytic_account_ids', analytic.id, analytic.name)">
-                                        <t t-if="state.filters.analytic_account_ids?.includes(analytic.id)">
-                                            <i class="fa fa-check-square-o text-success"/>
-                                        </t>
-                                        <t t-else="">
-                                            <i class="fa fa-square-o text-muted"/>
-                                        </t>
-                                        <t t-esc="analytic.name"/>
-                                    </a>
-                                </t>
-                            </div>
                             <div t-if="state.filters.analytic_account_ids?.length > 0" class="mt-2">
                                 <small class="text-muted">Selected: <t t-esc="state.filters.analytic_account_ids.length"/></small>
                                 <button class="btn btn-sm btn-link" t-on-click="() => this.clearFilter('analytic_account_ids')">Clear</button>
