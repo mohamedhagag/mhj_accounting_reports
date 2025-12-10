@@ -1,25 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-  <menuitem id="menu_finance_pdf_reports"
-    name="PDF Reports"
-    sequence="10"
+  <!-- Main Reports Category (parent under Finance) -->
+  <menuitem id="menu_mhj_accounting_reports"
+    name="Accounting Reports"
+    sequence="90"
     parent="account.menu_finance_reports" />
 
-  <menuitem id="menu_finance_legal_statement"
-    name="Financial Reports PDF"
+  <!-- Interactive Reports Submenu -->
+  <menuitem id="menu_interactive_reports_root"
+    name="Interactive Reports"
+    sequence="10"
+    parent="menu_mhj_accounting_reports" />
+
+  <!-- PDF Reports Submenu -->
+  <menuitem id="menu_pdf_reports_root"
+    name="PDF Reports"
     sequence="20"
-    parent="menu_finance_pdf_reports" />
+    parent="menu_mhj_accounting_reports" />
+
+  <!-- PDF Report Categories -->
+  <menuitem id="menu_finance_legal_statement"
+    name="Financial Reports"
+    sequence="10"
+    parent="menu_pdf_reports_root" />
 
   <menuitem id="menu_finance_partner_reports"
-    name="Partner Reports PDF"
-    sequence="30"
-    parent="menu_finance_pdf_reports" />
+    name="Partner Reports"
+    sequence="20"
+    parent="menu_pdf_reports_root" />
 
   <menuitem id="menu_finance_audit_reports"
-    name="Audit Reports PDF"
-    sequence="40"
-    parent="menu_finance_pdf_reports" />
+    name="Audit Reports"
+    sequence="30"
+    parent="menu_pdf_reports_root" />
 
   <record id="account.account_reports_management_menu" model="ir.ui.menu">
     <field name="sequence" eval="40" />

@@ -31,46 +31,39 @@
         <field name="target">current</field>
     </record>
 
-    <!-- Interactive submenu -->
-    <menuitem id="menu_interactive_reports_root"
-              name="Interactive Reports"
-              sequence="10"
-              parent="menu_finance_pdf_reports"
-              groups="account.group_account_manager,account.group_account_user"/>
-
-    <!-- Menu Item for Interactive Trial Balance -->
+    <!-- Interactive Reports Menu Items -->
     <menuitem id="menu_trial_balance_interactive"
-              name="Trial Balance Interactive"
-              sequence="21"
+              name="Trial Balance"
+              sequence="10"
               action="action_trial_balance_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 
     <menuitem id="menu_general_ledger_interactive"
-              name="General Ledger Interactive"
-              sequence="22"
+              name="General Ledger"
+              sequence="20"
               action="action_general_ledger_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 
     <menuitem id="menu_partner_ledger_interactive"
-              name="Partner Ledger Interactive"
-              sequence="23"
+              name="Partner Ledger"
+              sequence="30"
               action="action_partner_ledger_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 
-    <menuitem id="menu_cash_flow_interactive"
-              name="Cash Flow Interactive"
-              sequence="24"
-              action="action_cash_flow_interactive"
+    <menuitem id="menu_balance_sheet_interactive"
+              name="Balance Sheet"
+              sequence="40"
+              action="action_balance_sheet_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 
-    <menuitem id="menu_balance_sheet_interactive"
-              name="Balance Sheet Interactive"
-              sequence="25"
-              action="action_balance_sheet_interactive"
+    <menuitem id="menu_cash_flow_interactive"
+              name="Cash Flow"
+              sequence="50"
+              action="action_cash_flow_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 
