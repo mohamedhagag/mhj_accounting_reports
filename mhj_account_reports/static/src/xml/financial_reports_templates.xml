@@ -308,6 +308,7 @@
                                     <tr>
                                         <th>Code</th>
                                         <th>Account</th>
+                                        <th class="text-center">Details</th>
                                         <th class="text-end">Initial Debit</th>
                                         <th class="text-end">Initial Credit</th>
                                         <th class="text-end">Initial Balance</th>
@@ -317,7 +318,6 @@
                                         <th class="text-end">Ending Debit</th>
                                         <th class="text-end">Ending Credit</th>
                                         <th class="text-end">Ending Balance</th>
-                                        <th class="text-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -326,6 +326,12 @@
                                             <tr>
                                                 <td><t t-esc="account.code"/></td>
                                                 <td><t t-esc="account.name"/></td>
+                                                <td class="text-center">
+                                                    <t t-if="account.id">
+                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">Entries</button>
+                                                    </t>
+                                                    <t t-else="">&#160;</t>
+                                                </td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.initial_debit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.initial_credit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.initial_balance)"/></td>
@@ -335,20 +341,13 @@
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.end_debit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.end_credit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.end_balance)"/></td>
-                                                <td class="text-center">
-                                                    <t t-if="account.id">
-                                                        <button class="btn btn-link btn-sm p-0" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">
-                                                            <i class="fa fa-edit"></i>
-                                                        </button>
-                                                    </t>
-                                                </td>
                                             </tr>
                                         </t>
                                     </t>
                                 </tbody>
                                 <tfoot class="table-dark fw-bold">
                                     <tr>
-                                        <td colspan="12">TOTAL</td>
+                                        <td colspan="3">TOTAL</td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_debit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_credit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_balance)"/></td>
@@ -407,10 +406,10 @@
                                         <th>Code / Date</th>
                                         <th>Account / Journal</th>
                                         <th>Label</th>
+                                        <th class="text-center">Details</th>
                                         <th class="text-end">Debit</th>
                                         <th class="text-end">Credit</th>
                                         <th class="text-end">Balance</th>
-                                        <th class="text-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -423,16 +422,15 @@
                                                 <td><t t-esc="account.code"/></td>
                                                 <td><t t-esc="account.name"/></td>
                                                 <td></td>
+                                                <td class="text-center">
+                                                    <t t-if="account.id">
+                                                        <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">Entries</button>
+                                                    </t>
+                                                    <t t-else="">&#160;</t>
+                                                </td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.debit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.credit)"/></td>
                                                 <td class="text-end"><t t-esc="this.formatNumber(account.balance)"/></td>
-                                                <td class="text-center">
-                                                    <t t-if="account.id">
-                                                        <button class="btn btn-link btn-sm p-0" t-on-click.stop="() => this.openDrilldown('account', [account.id], this.accountLabel(account))">
-                                                            <i class="fa fa-edit"></i>
-                                                        </button>
-                                                    </t>
-                                                </td>
                                             </tr>
                                             <t t-if="this.isExpanded(account.id || account.code)">
                                                 <t t-foreach="account.move_lines || []" t-as="line" t-key="line.lid || line.id || line.ldate || line_index">
@@ -452,7 +450,7 @@
                                 </tbody>
                                 <tfoot class="table-dark fw-bold">
                                     <tr>
-                                        <td colspan="8">TOTAL</td>
+                                        <td colspan="5">TOTAL</td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.debit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.credit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.balance)"/></td>
@@ -499,11 +497,11 @@
                                     <tr>
                                         <th style="width: 32px;"></th>
                                         <th>Partner / Line</th>
+                                        <th class="text-center">Details</th>
                                         <th class="text-end">Initial / Date</th>
                                         <th class="text-end">Debit</th>
                                         <th class="text-end">Credit</th>
                                         <th class="text-end">Balance</th>
-                                        <th class="text-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -513,15 +511,13 @@
                                                 <i class="fa" t-att-class="this.isExpanded(partner.id) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                                             </td>
                                             <td><t t-esc="partner.name"/></td>
+                                            <td class="text-center">
+                                                <button class="btn btn-link btn-sm" t-on-click.stop="() => this.openDrilldown('partner', [partner.id], partner.name || 'Partner')">Entries</button>
+                                            </td>
                                             <td class="text-end"><t t-esc="this.formatNumber(partner.initial_balance?.balance)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(partner.total_debit)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(partner.total_credit)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(partner.total_balance)"/></td>
-                                            <td class="text-center">
-                                                <button class="btn btn-link btn-sm p-0" t-on-click.stop="() => this.openDrilldown('partner', [partner.id], partner.name || 'Partner')">
-                                                    <i class="fa fa-edit"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                         <t t-if="this.isExpanded(partner.id)">
                                             <t t-foreach="partner.lines || []" t-as="line" t-key="line.id || line.date || line_index">
