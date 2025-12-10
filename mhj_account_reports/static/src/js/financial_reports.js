@@ -275,36 +275,6 @@ export class FinancialReportBase extends Component {
     }
 
     async printReport() {
-        try {
-            // Create a print-friendly container with proper CSS (no forced orientation)
-            const style = document.createElement('style');
-            style.textContent = `
-                @page {
-                    size: A4;
-                    margin: 12mm;
-                }
-                 @page landscape {
-                    size: A4;
-                    margin: 12mm;
-                }
-                @media print {
-                    body { margin: 0; padding: 0; }
-                    .o_web_client, .o_form_view, .o_list_view { background: white !important; }
-                    .o_control_panel, .oe_button_box, .o_form_statusbar { display: none !important; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Trigger native print dialog (user can select orientation)
-            window.print();
-            
-            // Clean up after print dialog closes (user may cancel or print)
-            setTimeout(() => {
-                document.head.removeChild(style);
-            }, 1000);
-        } catch (error) {
-            console.error('Print error:', error);
-            this.notification.add(`Error preparing report for printing: ${error.message}`, { type: "danger" });
-        }
+        await window.print();
     }
 }
