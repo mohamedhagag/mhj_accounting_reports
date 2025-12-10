@@ -748,6 +748,118 @@ controllers/
 
 ## Key Learnings from Dynamic Reports
 
+---
+
+## SESSION SUMMARY (Dec 10, 2025 - SECOND SESSION: Print & Excel Export)
+
+### Major Features Implemented
+
+#### 1. Print Functionality ✅
+- **Commit**: `4c8ada1`
+- Implemented browser print dialog integration
+- Print-friendly HTML generation with styling
+- `@media print` CSS rules for proper formatting
+- All 6 reports support print preview
+- Removes charts/filters/controls in print mode
+
+#### 2. HTML-to-Excel Converter ✅
+- **Commit**: `95e9cd4`
+- New `HtmlToExcelConverter` class (425 lines)
+- Converts on-screen HTML tables to Excel workbooks
+- Multi-sheet workbook support with auto-naming
+- Auto-adjusts column widths (12-50 char range)
+- Handles merged cells (colspan/rowspan)
+- Professional cell styling and formatting
+- SheetJS (XLSX 0.18.5) CDN integration
+
+#### 3. Bug Fixes & Refinements
+- **`3c0cc39`** - Fixed content area selector (fallback chain: `.financial-report-container` → `.mhj_report_content` → `.o_content`)
+- **`2a6651a`** - Fixed account name parsing ("My G21" no longer becomes "21")
+- **`8dc71d9`** - Added automatic currency formatting with thousands separator
+- **`38fae47`** - Fixed thousands separator format application
+- **`ccc2819`** - Forced numeric cell typing for Excel formatting
+
+### Commits Pushed
+| Commit | Date | Message |
+|--------|------|---------|
+| `4c8ada1` | Dec 10 | feat: implement print functionality for all dynamic reports |
+| `95e9cd4` | Dec 10 | feat: add HTML-to-Excel export functionality for interactive reports |
+| `3c0cc39` | Dec 10 | fix: correct selector for content area in HTML-to-Excel converter |
+| `2a6651a` | Dec 10 | fix: prevent numeric parsing of account names containing numbers |
+| `8dc71d9` | Dec 10 | feat: add automatic currency formatting with thousands separator |
+| `38fae47` | Dec 10 | fix: ensure thousands separator format is properly applied to numbers |
+| `ccc2819` | Dec 10 | fix: force numeric cell typing and thousands format in Excel export |
+
+### Files Modified/Created
+- `mhj_account_reports/static/src/js/html_to_excel.js` (NEW - 425 lines)
+- `mhj_account_reports/static/src/js/financial_reports.js` (import + printReport() + exportExcel())
+- `mhj_account_reports/static/src/css/financial_reports.css` (@media print rules)
+- `mhj_account_reports/__manifest__.py` (SheetJS CDN + asset ordering)
+
+### Key Technical Details
+
+**Print Implementation**:
+- `printReport()` creates print-friendly HTML structure
+- Opens in new window with browser print dialog
+- Preserves hierarchical indentation and styling
+- A4 page size with 10mm margins
+- Color-safe printing with `-webkit-print-color-adjust: exact`
+
+**Excel Export Implementation**:
+- `HtmlToExcelConverter` class with 8 public methods
+- `_detectNumericColumns()` - Smart detection of amount columns
+- `_applyCellStyles()` - Professional formatting engine
+- `_getCellValue()` - Intelligent text/number parsing
+- `_autoAdjustColumns()` - Dynamic width calculation
+- Numeric format: `#,##0.00` (thousands separator + 2 decimals)
+- Cell type marker: `t = 'n'` for numeric cells
+
+**Number Formatting**:
+- Detects numeric columns by: content pattern + alignment + column density
+- Only parses pure numbers as numeric (e.g., "1234.56", "-100")
+- Preserves account names containing numbers (e.g., "My G21" stays as text)
+- Currency amounts with symbols detected and formatted
+- Thousands separator applied to all numeric cells in Excel
+
+### User Issues Resolved
+
+1. **"My G21" showing as "21" in Excel**
+   - Fixed by improving regex pattern matching in `_getCellValue()`
+   - Now only parses purely numeric content as numbers
+   - Text with mixed alphanumeric preserved as-is
+
+2. **Thousands separator not working**
+   - Fixed by explicitly setting cell type (`t = 'n'`) and format (`z = '#,##0.00'`)
+   - XLSX library now properly renders separator in Excel
+   - Applies to both direct cells and styled cells
+
+3. **Excel export failing with selector error**
+   - Fixed by implementing fallback chain for content area detection
+   - Works with both `mhj_account_reports` and `mhj_financial_reports` layouts
+
+### Testing Coverage
+- ✅ Print dialog opens with formatted content
+- ✅ Excel export creates valid .xlsx files
+- ✅ Multi-table reports create multi-sheet workbooks
+- ✅ Account names preserved correctly
+- ✅ Currency amounts formatted with separators
+- ✅ Column widths auto-adjust to content
+- ✅ Charts/filters hidden in exports
+- ✅ All 6 report types support print/export
+
+### Dependencies Added
+- **SheetJS (XLSX) 0.18.5** via CDN
+- No new Python dependencies
+
+### Code Quality
+- All new methods documented with JSDoc
+- Error handling with user notifications
+- Fallback selectors for robustness
+- Performance-optimized algorithms (O(n) column detection)
+- Consistent style with existing codebase
+
+---
+
 ### Do's ✅
 - Use `t-model` for two-way binding on filters
 - Use `t-foreach` for rendering lists with `t-key` for performance
@@ -759,6 +871,8 @@ controllers/
 - Use `useService()` for orm, notification, actionService
 - Responsive grid: `col-md-3`, `col-md-6` Bootstrap classes
 - Use Chart.js for visualizations via CDN
+- Use HtmlToExcelConverter for Excel exports from HTML tables
+- Set explicit numeric cell types in XLSX: `cell.t = 'n'`
 
 ### Don'ts ❌
 - Don't mix ORM calls in component - use RPC to controller
@@ -768,6 +882,8 @@ controllers/
 - Don't forget responsive design - test mobile
 - Don't forget i18n - use translation strings where possible
 - Don't create overlapping data in state - single source of truth
+- Don't use generic number format - use `#,##0.00` with cell typing
+- Don't rely on single CSS selector - use fallback chains
 
 ### UI/UX Patterns
 - Control panel: Fixed top with button group (Apply, Reset, Export, Print, Filters)
@@ -778,5 +894,6 @@ controllers/
 - Charts: Chart.js with proper legends and tooltips
 - Mobile: Stack vertically, reduce font sizes, single column layout
 - Print: Hide filters/buttons, adjust fonts, clean borders
+- Excel: Auto-sized columns, currency formatting, multi-sheet workbooks
 
 
