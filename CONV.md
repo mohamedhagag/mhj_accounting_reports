@@ -896,4 +896,23 @@ controllers/
 - Print: Hide filters/buttons, adjust fonts, clean borders
 - Excel: Auto-sized columns, currency formatting, multi-sheet workbooks
 
+---
+
+## SESSION SUMMARY (Dec 10, 2025 - Trial Balance Corrections)
+
+### Fixes Implemented
+- Corrected trial balance initial balance context:
+  - Reset date filters to avoid overlap; set `initial_bal=True`, `strict_range=False`, `date_from=False`, `date_to=False`
+  - Initial query now uses explicit `date < date_from` with proper context
+- Ensured current period uses report context with `strict_range=True` so date range/target_move apply correctly
+- Cleaned batch loop indentation in initial balance query
+
+### Impact
+- Initial balances no longer double-apply date filters, preventing under/over counting
+- Current period sums honor the report’s date range and state filters
+- Trial Balance totals should now align with posted data across batches
+
+### Commit
+- `1ecf333` — fix: correct trial balance contexts and initial balance query
+
 
