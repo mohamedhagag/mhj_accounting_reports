@@ -365,14 +365,16 @@ export class HtmlToExcelConverter {
                 } else if (classes.includes('text-end') || numericColumns.has(colIndex)) {
                     // Use currency format for right-aligned or numeric columns
                     style = { ...styles.currency };
-                    // Ensure the format is applied to numeric values
                     if (typeof cellValue.v === 'number') {
-                        style.numFmt = '#,##0.00';
+                        // Explicitly mark as number and set format to ensure thousands separator
+                        cellValue.t = 'n';
+                        cellValue.z = '#,##0.00';
                     }
                 } else if (typeof cellValue.v === 'number') {
                     // Apply number format to any numeric cell
                     style = { ...styles.currency };
-                    style.numFmt = '#,##0.00';
+                    cellValue.t = 'n';
+                    cellValue.z = '#,##0.00';
                 }
 
                 if (Object.keys(style).length > 0) {
