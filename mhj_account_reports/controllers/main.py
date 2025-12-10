@@ -322,16 +322,28 @@ class AccountingReportsController(http.Controller):
 
         # Re-call _get_report_values with synced data to ensure data['computed'] is populated
         report_result = report_model.with_context(ctx)._get_report_values([], data)
-
         _logger.info(f"Partner ledger partners: {len(partners)} (filtered={bool(filters.get('partner_ids'))}), computed keys={list(data.get('computed', {}).keys())}")
 
         partner_rows = []
         for partner in partners:
             lines = report_model.with_context(ctx)._lines(data, partner)
-            init_bal = report_model.get_partner_initial_balance_safe(data, partner, data['form'].get('date_from'))
-            total_debit = init_bal.get('debit', 0.0) + sum(l.get('debit', 0.0) for l in lines)
-            total_credit = init_bal.get('credit', 0.0) + sum(l.get('credit', 0.0) for l in lines)
-            total_balance = init_bal.get('balance', 0.0) + sum(l.get('debit', 0.0) - l.get('credit', 0.0) for l in lines)
+            
+            # Calculate totals from lines only (lines already include initial balance in running sum)
+            total_debit = sum(l.get('debit', 0.0) for l in lines if l.get('ref') != 'Initial Balance')
+            total_credit = sum(l.get('credit', 0.0) for l in lines if l.get('ref') != 'Initial Balance')
+            
+            # Get final running balance from last line
+            final_balance = lines[-1].get('progress', 0.0) if lines else 0.0
+            
+            # Get initial balance (first line if it exists)
+            init_bal = {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
+            if lines and lines[0].get('ref') == 'Initial Balance':
+                init_bal = {
+                    'debit': lines[0].get('debit', 0.0),
+                    'credit': lines[0].get('credit', 0.0),
+                    'balance': lines[0].get('progress', 0.0)
+                }
+            
             partner_rows.append({
                 'id': partner.id,
                 'name': partner.name,
@@ -340,7 +352,7 @@ class AccountingReportsController(http.Controller):
                 'lines': lines,
                 'total_debit': total_debit,
                 'total_credit': total_credit,
-                'total_balance': total_balance,
+                'total_balance': final_balance,
             })
 
         response = {
