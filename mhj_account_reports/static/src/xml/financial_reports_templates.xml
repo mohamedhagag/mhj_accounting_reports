@@ -605,28 +605,21 @@
                                 <div class="table-responsive">
                                     <table class="table table-sm table-hover">
                                         <tbody>
-                                            <t t-set="assets_lines" t-value="[l for l in (state.reportData.lines or []) if l.get('name', '').lower() in ('assets',) or (l.get('level', 0) &lt;= 2 and not any(x.get('name', '').lower() in ('liability', 'liabilities', 'liabilitysum', 'profitloss') for x in (state.reportData.lines or [])[:state.reportData.lines.index(l) if l in state.reportData.lines else 0]))]"/>
-                                            <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line_index">
-                                                <t t-if="line.get('name', '').lower() == 'assets' or (line.get('level', 0) == 1 and line.get('parent_index', -1) &lt; 0)">
-                                                    <tr t-if="line.get('name', '').lower() == 'assets'">
+                                            <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
+                                                <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
+                                                <t t-set="isAssetLine" t-value="lineName.includes('asset') or (line.level === 1 and (line.parent_index || -1) &lt; 0)"/>
+                                                <t t-if="isAssetLine and lineName === 'assets'">
+                                                    <tr>
                                                         <td colspan="2"></td>
                                                     </tr>
-                                                    <t t-set="asset_start" t-value="line_index"/>
                                                 </t>
-                                            </t>
-                                            <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line_index">
-                                                <t t-if="line.get('name', '').lower() in ('liability', 'liabilities', 'liabilitysum', 'profit', 'profitloss', 'profitandloss')">
-                                                    <t t-set="asset_end" t-value="line_index"/>
-                                                </t>
-                                            </t>
-                                            <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line_index">
-                                                <t t-if="not any(x in (line.get('name', '') or '').lower() for x in ('liability', 'liabilities', 'profit', 'loss', 'expense', 'income'))">
+                                                <t t-if="not (lineName.includes('liability') or lineName.includes('liabilities') or lineName.includes('profit') or lineName.includes('loss') or lineName.includes('expense') or lineName.includes('income'))">
                                                     <tr>
                                                         <td>
-                                                            <span t-att-style="'padding-left:' + ((line.get('level', 0)) * 12) + 'px;'" t-att-class="'fw-bold' if line.get('type') == 'report' else ''"></span>
-                                                            <t t-esc="line.get('name')"/>
+                                                            <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
+                                                            <t t-esc="line.name"/>
                                                         </td>
-                                                        <td class="text-end" t-att-class="'fw-bold' if line.get('type') == 'report' else ''"><t t-esc="this.formatNumber(line.get('balance', 0))"/></td>
+                                                        <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''"><t t-esc="this.formatNumber(line.balance || 0)"/></td>
                                                     </tr>
                                                 </t>
                                             </t>
@@ -647,14 +640,15 @@
                                 <div class="table-responsive">
                                     <table class="table table-sm table-hover">
                                         <tbody>
-                                            <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line_index">
-                                                <t t-if="any(x in (line.get('name', '') or '').lower() for x in ('liability', 'liabilities', 'equity', 'profit', 'loss'))">
+                                            <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
+                                                <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
+                                                <t t-if="lineName.includes('liability') or lineName.includes('liabilities') or lineName.includes('equity') or lineName.includes('profit') or lineName.includes('loss')">
                                                     <tr>
                                                         <td>
-                                                            <span t-att-style="'padding-left:' + ((line.get('level', 0)) * 12) + 'px;'" t-att-class="'fw-bold' if line.get('type') == 'report' else ''"></span>
-                                                            <t t-esc="line.get('name')"/>
+                                                            <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
+                                                            <t t-esc="line.name"/>
                                                         </td>
-                                                        <td class="text-end" t-att-class="'fw-bold' if line.get('type') == 'report' else ''"><t t-esc="this.formatNumber(line.get('balance', 0))"/></td>
+                                                        <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''"><t t-esc="this.formatNumber(line.balance || 0)"/></td>
                                                     </tr>
                                                 </t>
                                             </t>
