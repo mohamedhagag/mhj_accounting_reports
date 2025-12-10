@@ -581,4 +581,180 @@ class AccountingReportsController(http.Controller):
         }
         _logger.info(f"Profit & Loss lines: {len(lines)}")
         return response
-        return response
+
+    # ========== DRILLDOWN ROUTES ==========
+    @http.route('/mhj/accounting_reports/drilldown/account/<int:account_id>', type='json', auth='user')
+    def drilldown_account(self, account_id, filters=None):
+        """Get move lines for a specific account."""
+        try:
+            if not filters:
+                filters = {}
+            _logger.info(f"Drilldown account {account_id} with filters: {filters}")
+            
+            account = request.env['account.account'].browse(account_id)
+            if not account.exists():
+                return {'error': 'Account not found'}
+            
+            journal_ids = self._resolve_journal_ids(filters)
+            
+            # Build domain for move lines
+            domain = [('account_id', '=', account_id)]
+            if journal_ids:
+                domain.append(('journal_id', 'in', journal_ids))
+            if filters.get('date_from'):
+                domain.append(('date', '>=', filters.get('date_from')))
+            if filters.get('date_to'):
+                domain.append(('date', '<=', filters.get('date_to')))
+            if filters.get('state') == 'posted':
+                domain.append(('parent_state', '=', 'posted'))
+            if filters.get('partner_ids'):
+                domain.append(('partner_id', 'in', filters.get('partner_ids')))
+            
+            # Get move lines
+            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
+            
+            lines_data = []
+            for line in move_lines:
+                lines_data.append({
+                    'id': line.id,
+                    'date': line.date.isoformat() if line.date else '',
+                    'move_name': line.move_id.name,
+                    'partner': line.partner_id.name or '',
+                    'reference': line.ref or '',
+                    'debit': line.debit,
+                    'credit': line.credit,
+                    'balance': line.balance,
+                    'description': line.name or '',
+                })
+            
+            return {
+                'account_code': account.code,
+                'account_name': account.name,
+                'lines': lines_data,
+                'line_count': len(lines_data),
+            }
+        except Exception as e:
+            _logger.error(f"Error in drilldown_account: {str(e)}", exc_info=True)
+            return {'error': str(e)}
+
+    @http.route('/mhj/accounting_reports/drilldown/partner/<int:partner_id>', type='json', auth='user')
+    def drilldown_partner(self, partner_id, filters=None):
+        """Get move lines for a specific partner."""
+        try:
+            if not filters:
+                filters = {}
+            _logger.info(f"Drilldown partner {partner_id} with filters: {filters}")
+            
+            partner = request.env['res.partner'].browse(partner_id)
+            if not partner.exists():
+                return {'error': 'Partner not found'}
+            
+            journal_ids = self._resolve_journal_ids(filters)
+            
+            # Build domain for move lines
+            domain = [('partner_id', '=', partner_id)]
+            if journal_ids:
+                domain.append(('journal_id', 'in', journal_ids))
+            if filters.get('date_from'):
+                domain.append(('date', '>=', filters.get('date_from')))
+            if filters.get('date_to'):
+                domain.append(('date', '<=', filters.get('date_to')))
+            if filters.get('state') == 'posted':
+                domain.append(('parent_state', '=', 'posted'))
+            if filters.get('account_ids'):
+                domain.append(('account_id', 'in', filters.get('account_ids')))
+            
+            # Get move lines
+            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
+            
+            lines_data = []
+            for line in move_lines:
+                lines_data.append({
+                    'id': line.id,
+                    'date': line.date.isoformat() if line.date else '',
+                    'move_name': line.move_id.name,
+                    'account_code': line.account_id.code,
+                    'account_name': line.account_id.name,
+                    'reference': line.ref or '',
+                    'debit': line.debit,
+                    'credit': line.credit,
+                    'balance': line.balance,
+                    'description': line.name or '',
+                })
+            
+            return {
+                'partner_name': partner.name,
+                'lines': lines_data,
+                'line_count': len(lines_data),
+            }
+        except Exception as e:
+            _logger.error(f"Error in drilldown_partner: {str(e)}", exc_info=True)
+            return {'error': str(e)}
+
+    @http.route('/mhj/accounting_reports/drilldown/financial_line/<int:line_id>', type='json', auth='user')
+    def drilldown_financial_line(self, line_id, filters=None):
+        """Get account move lines for a financial report line."""
+        try:
+            if not filters:
+                filters = {}
+            _logger.info(f"Drilldown financial line {line_id} with filters: {filters}")
+            
+            financial_line = request.env['account.financial.report'].browse(line_id)
+            if not financial_line.exists():
+                return {'error': 'Financial report line not found'}
+            
+            journal_ids = self._resolve_journal_ids(filters)
+            
+            # Get accounts linked to this financial line
+            account_ids = financial_line.account_ids.ids
+            if not account_ids and financial_line.account_type_ids:
+                # Get accounts by type
+                account_ids = request.env['account.account'].search([
+                    ('user_type_id', 'in', financial_line.account_type_ids.ids)
+                ]).ids
+            
+            if not account_ids:
+                return {
+                    'financial_line_name': financial_line.name,
+                    'lines': [],
+                    'line_count': 0,
+                }
+            
+            # Build domain for move lines
+            domain = [('account_id', 'in', account_ids)]
+            if journal_ids:
+                domain.append(('journal_id', 'in', journal_ids))
+            if filters.get('date_from'):
+                domain.append(('date', '>=', filters.get('date_from')))
+            if filters.get('date_to'):
+                domain.append(('date', '<=', filters.get('date_to')))
+            if filters.get('state') == 'posted':
+                domain.append(('parent_state', '=', 'posted'))
+            
+            # Get move lines
+            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
+            
+            lines_data = []
+            for line in move_lines:
+                lines_data.append({
+                    'id': line.id,
+                    'date': line.date.isoformat() if line.date else '',
+                    'move_name': line.move_id.name,
+                    'account_code': line.account_id.code,
+                    'account_name': line.account_id.name,
+                    'partner': line.partner_id.name or '',
+                    'reference': line.ref or '',
+                    'debit': line.debit,
+                    'credit': line.credit,
+                    'balance': line.balance,
+                    'description': line.name or '',
+                })
+            
+            return {
+                'financial_line_name': financial_line.name,
+                'lines': lines_data,
+                'line_count': len(lines_data),
+            }
+        except Exception as e:
+            _logger.error(f"Error in drilldown_financial_line: {str(e)}", exc_info=True)
+            return {'error': str(e)}
