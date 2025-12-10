@@ -159,6 +159,11 @@ class AccountingReportsController(http.Controller):
         total_end_credit = 0.0
         
         for account in result.get('Accounts', []):
+            # Skip accounts with no moves (debit=0, credit=0, balance=0)
+            has_moves = account.get('debit', 0.0) != 0 or account.get('credit', 0.0) != 0 or account.get('balance', 0.0) != 0
+            if not has_moves:
+                continue
+                
             accounts_data.append({
                 'id': account.get('id'),
                 'code': account.get('code'),
@@ -246,7 +251,8 @@ class AccountingReportsController(http.Controller):
         result = report_model.with_context(ctx)._get_report_values([], data)
 
         accounts_data = result.get('Accounts', [])
-        # Compute quick totals
+        # Filter out accounts with no moves and compute totals
+        accounts_data = [a for a in accounts_data if a.get('move_lines') or a.get('debit', 0.0) != 0 or a.get('credit', 0.0) != 0]
         total_debit = sum(a.get('debit', 0.0) for a in accounts_data)
         total_credit = sum(a.get('credit', 0.0) for a in accounts_data)
         total_balance = sum(a.get('balance', 0.0) for a in accounts_data)
