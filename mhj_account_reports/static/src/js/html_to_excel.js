@@ -127,10 +127,14 @@ export class HtmlToExcelConverter {
     convertEntireReportToWorkbook(reportTitle = 'Financial Report') {
         const XLSX = this._ensureXLSX();
         const workbook = XLSX.utils.book_new();
-        const contentArea = document.querySelector('.financial-report-container');
+        
+        // Try multiple selectors for compatibility
+        let contentArea = document.querySelector('.financial-report-container') ||
+                         document.querySelector('.mhj_report_content') ||
+                         document.querySelector('.o_content');
         
         if (!contentArea) {
-            throw new Error('Report content area not found. Expected element with class "financial-report-container"');
+            throw new Error('Report content area not found. Expected element with class "financial-report-container", "mhj_report_content", or "o_content"');
         }
 
         // Find all tables in the report
