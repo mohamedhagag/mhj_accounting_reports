@@ -250,12 +250,20 @@ export class HtmlToExcelConverter {
     _getCellValue(cell) {
         const text = cell.textContent.trim();
         
-        // Try to parse as number
-        const num = parseFloat(text.replace(/[^\d.-]/g, ''));
-        if (!isNaN(num) && text !== '') {
-            return num;
+        // Check if cell contains primarily numeric content (like currency amounts)
+        // Only convert to number if the text is mostly numbers with optional formatting
+        const numericOnlyMatch = text.match(/^[-+]?[\d,]+\.?\d*$/); // e.g., "1,234.56" or "-100"
+        const currencyMatch = text.match(/^[-+]?[\d,]+\.?\d*\s*[%€$£¥₹]?$/i); // e.g., "1,234.56 €"
+        
+        if (numericOnlyMatch || currencyMatch) {
+            // Try to parse as number (remove currency symbols and commas)
+            const num = parseFloat(text.replace(/[^\d.-]/g, ''));
+            if (!isNaN(num)) {
+                return num;
+            }
         }
         
+        // Return as text if not a pure number
         return text || '';
     }
 
