@@ -275,25 +275,6 @@ export class FinancialReportBase extends Component {
     }
 
     async printReport() {
-        // Inject print stylesheet for @page rules
-        const style = document.createElement('style');
-        style.media = 'print';
-        style.innerHTML = `
-            @page {
-                size: A4;
-                margin: 0.2cm;
-            }
-            @page landscape {
-                size: A4 landscape;
-                margin: 0.2cm;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Clean up after printing
-        window.addEventListener('afterprint', () => {
-            document.head.removeChild(style);
-        }, { once: true });
         await window.print();
     }
 }
