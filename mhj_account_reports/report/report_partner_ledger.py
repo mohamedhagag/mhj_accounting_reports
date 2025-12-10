@@ -128,6 +128,7 @@ class ReportPartnerLedger(models.AbstractModel):
     def _sum_partner(self, data, partner, field):
         """
         Optimized partner sum calculation with better indexing
+        Note: This calculates period totals (respects date_from/date_to from context)
         """
         if field not in ['debit', 'credit', 'debit - credit']:
             return 0.0
@@ -135,7 +136,7 @@ class ReportPartnerLedger(models.AbstractModel):
         result = 0.0
         AML = self.env['account.move.line']
         ctx = data['form'].get('used_context', {})
-        ctx['date_from'] = None  # Avoid date filtering for sum
+        # Keep date_from to get period totals, not all-time totals
         query_get_data = AML.with_context(ctx)._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
@@ -178,9 +179,17 @@ class ReportPartnerLedger(models.AbstractModel):
             # Use a simple query without query_get to avoid date filtering issues
             reconcile_clause = "" if data['form']['reconciled'] else ' AND aml.full_reconcile_id IS NULL '
             
+            # Build journal filter clause
+            journal_clause = ""
+            journal_ids = data['form'].get('used_context', {}).get('journal_ids') or data['form'].get('journal_ids')
+            if journal_ids:
+                journal_clause = " AND aml.journal_id IN %s"
+            
             # Simple direct query for initial balance
             params = [partner.id, tuple(data['computed']['move_state']), 
                      tuple(data['computed']['account_ids']), date_from]
+            if journal_ids:
+                params.append(tuple(journal_ids))
             
             query = """SELECT COALESCE(SUM(aml.debit), 0.0) as initial_debit,
                               COALESCE(SUM(aml.credit), 0.0) as initial_credit,
@@ -190,7 +199,7 @@ class ReportPartnerLedger(models.AbstractModel):
                     WHERE aml.partner_id = %s
                         AND am.state IN %s
                         AND aml.account_id IN %s
-                        AND aml.date < %s""" + reconcile_clause
+                        AND aml.date < %s""" + journal_clause + reconcile_clause
                         
             self.env.cr.execute(query, tuple(params))
             

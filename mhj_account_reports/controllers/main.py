@@ -136,9 +136,13 @@ class AccountingReportsController(http.Controller):
         # Set context with all the filter values
         _logger.info(f"Setting context: {used_context}")
         ctx = dict(request.env.context, **used_context)
-        ctx['account_ids'] = account_ids
-        ctx['partner_ids'] = filters.get('partner_ids', [])
-        ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
+        # Ensure all filter IDs are in context for _query_get
+        if filters.get('account_ids'):
+            ctx['account_ids'] = filters.get('account_ids')
+        if filters.get('partner_ids'):
+            ctx['partner_ids'] = filters.get('partner_ids')
+        if filters.get('analytic_account_ids'):
+            ctx['analytic_account_ids'] = filters.get('analytic_account_ids')
         # Add active_model and active_ids (required by report model)
         ctx['active_model'] = 'account.account'
         ctx['active_ids'] = accounts.ids  # Pass selected/all account IDs
@@ -252,6 +256,9 @@ class AccountingReportsController(http.Controller):
         ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
         ctx['active_model'] = 'account.account'
         ctx['active_ids'] = accounts.ids
+        # Ensure all filters are in context for _query_get
+        if filters.get('account_ids'):
+            ctx['account_ids'] = filters.get('account_ids')
 
         _logger.info("Calling GL _get_report_values")
         result = report_model.with_context(ctx)._get_report_values([], data)
@@ -317,6 +324,8 @@ class AccountingReportsController(http.Controller):
 
         ctx = dict(request.env.context, **used_context)
         ctx['partner_ids'] = partner_ids
+        ctx['analytic_account_ids'] = filters.get('analytic_account_ids', [])
+        ctx['account_ids'] = filters.get('account_ids', [])
         ctx['active_model'] = 'res.partner'
         ctx['active_ids'] = partners.ids
 

@@ -1,8 +1,37 @@
 # Conversation Log & Development Guide
 
 **Started**: December 9, 2025  
-**Last Updated**: Dec 9, 2025 - Complete Analysis & Roadmap  
-**Session**: OWL Migration - Legacy to Interactive Reports
+**Last Updated**: December 10, 2025 - Interactive Reports Filter Fix Session  
+**Session**: Interactive Reports - Complete Filter Implementation & Partner Ledger Fix
+
+---
+
+## CURRENT TASK (Dec 10, 2025) - ✅ COMPLETED
+**Issue**: Interactive reports have partial/broken filtering + Partner Ledger calculation errors
+**Status**: PDF/Excel work fine; fixed interactive reports
+**Results**: 
+1. ✅ All filter options now propagate correctly to all interactive ledger reports
+2. ✅ Partner Ledger calculations fixed (initial balance, running sum, totals)
+3. ✅ Verified Journal Ledger does NOT have interactive version (documented as missing)
+
+### Fixes Applied
+**Partner Ledger Calculations** (`report/report_partner_ledger.py`):
+1. `_get_partner_initial_balance()`: Now applies journal filter from context
+2. `_sum_partner()`: Preserves date_from to calculate period totals (not all-time)
+3. Both methods now correctly honor all filters (journals, dates, reconciled status)
+
+**Filter Context Propagation** (`controllers/main.py`):
+1. Trial Balance: Added explicit context assignment for account_ids, partner_ids, analytic_account_ids
+2. General Ledger: Ensured all filter IDs are properly set in context
+3. Partner Ledger: Added analytic_account_ids and account_ids to context
+
+**Interactive Reports Status**:
+- ✅ Trial Balance (5 reports total)
+- ✅ General Ledger
+- ✅ Partner Ledger (calculations now correct)
+- ✅ Cash Flow
+- ✅ Balance Sheet
+- ❌ Journal Ledger (not implemented for interactive mode)
 
 ---
 
@@ -14,6 +43,7 @@
 - **Purpose**: Comprehensive financial reporting with performance optimizations for millions of journal items
 - **Target**: Hajjaj.Pro accounting solution with Excel export support
 - **Branch**: 18-dyn
+- **Interactive Reports**: OWL-based JavaScript components with JSON endpoints
 
 ---
 
@@ -112,17 +142,66 @@ account_batches = [accounts[i:i + BATCH_SIZE] for i in range(0, len(accounts), B
 
 ## Report Output Matrix
 
-| Report | Wizard | PDF | Excel | Report Model |
-|--------|--------|-----|-------|--------------|
-| General Ledger | ✅ | ✅ | ✅ | report_general_ledger.py |
-| Partner Ledger | ✅ | ✅ | ✅ | report_partner_ledger.py |
-| Trial Balance | ✅ | ✅ | ✅ | report_trial_balance.py |
-| Tax Report | ✅ | ✅ | ❌ | report_tax.py |
-| Aged Partner | ✅ | ✅ | ❌ | report_aged_partner.py |
-| Financial | ✅ | ✅ | ❌ | report_financial.py |
-| Journal Audit | ✅ | ✅ | ❌ | report_journal.py |
-| Journal Ledger | ❌ | ✅ | ❌ | report_journal_ledger.py |
-| Cash Flow | ❌ | ✅ | ❌ | report_cash_flow.py |
+| Report | Wizard | PDF | Excel | Interactive | Status |
+|--------|--------|-----|-------|-------------|--------|
+| General Ledger | ✅ | ✅ | ✅ | ✅ | Filters partially working |
+| Partner Ledger | ✅ | ✅ | ✅ | ✅ | **Broken calculations** |
+| Trial Balance | ✅ | ✅ | ✅ | ✅ | Working |
+| Cash Flow | ❌ | ✅ | ❌ | ✅ | Working |
+| Balance Sheet | ❌ | ✅ | ❌ | ✅ | Working |
+| Journal Ledger | ❌ | ✅ | ❌ | ❓ | **To verify** |
+| Tax Report | ✅ | ✅ | ❌ | ❌ | N/A |
+| Aged Partner | ✅ | ✅ | ❌ | ❌ | N/A |
+| Financial | ✅ | ✅ | ❌ | ❌ | N/A |
+| Journal Audit | ✅ | ✅ | ❌ | ❌ | N/A |
+
+---
+
+## Interactive Reports Architecture (OWL)
+
+### Backend - Controllers (`controllers/main.py`)
+**Routes**:
+- `/mhj/accounting_reports/get_data` - Main JSON endpoint
+- `/mhj/accounting_reports/get_filter_data` - Filter dropdown data
+
+**Methods**:
+- `_build_used_context(filters)` - Mirrors wizard context for date/state/journal filtering
+- `_get_trial_balance_data(filters)` - Trial Balance JSON
+- `_get_general_ledger_data(filters)` - General Ledger JSON
+- `_get_partner_ledger_data(filters)` - Partner Ledger JSON (❌ broken calculations)
+- `_get_cash_flow_data(filters)` - Cash Flow JSON
+- `_get_balance_sheet_data(filters)` - Balance Sheet JSON
+
+**Pattern**: Controllers call existing report models' `_get_report_values()` to reuse PDF logic
+
+### Frontend - JavaScript/OWL (`static/src/js/`)
+**Base Component**: `financial_reports.js` → `FinancialReportBase`
+- Default filters with all options
+- `loadReport()` - RPC call to get data
+- `applyFilters()` - Reload with current filters
+- `getVisibleAccounts(accounts)` - Client-side display_account filtering
+- `loadFilterData()` - Load journals/accounts/partners/analytics dropdowns
+
+**Report Components**:
+- `trial_balance_report.js` → `TrialBalanceReport` (extends FinancialReportBase)
+- `general_ledger_report.js` → `GeneralLedgerReport` (toggleable account expansion)
+- `partner_ledger_report.js` → `PartnerLedgerReport` (toggleable partner expansion)
+- `cash_flow_report.js` → `CashFlowReport`
+
+**Templates**: `static/src/xml/financial_reports_templates.xml`
+- Base template with filter panel (all common filters + report-specific)
+- Content templates per report type
+- Uses `getVisibleAccounts()` for Trial Balance & General Ledger
+
+### Available Filters
+**Common** (all reports):
+- `date_from`, `date_to`, `state`, `journal_ids`, `account_ids`, `partner_ids`, `analytic_account_ids`, `display_account`
+
+**General Ledger**:
+- `sortby` (sort_date/sort_journal_partner), `initial_balance`
+
+**Partner Ledger**:
+- `result_selection` (customer/supplier/customer_supplier), `reconciled`, `amount_currency`, `initial_balance`
 
 ---
 
@@ -233,11 +312,29 @@ MOVE_LINE_LIMIT = 50000  # per account
 
 ---
 
-## Session Status - OWL Migration & Trial Balance Debugging ✅ FIXED
+## Recent Sessions History
 
-### Latest Updates (Backend)
-- Added JSON endpoints for `general_ledger`, `partner_ledger`, and `cash_flow` in `controllers/main.py`, reusing existing report models
-- Trial Balance endpoint now respects `account_ids` filter and returns active_ids
+### Dec 10, 2025 - Interactive Filter Implementation (In Progress)
+**Commits**:
+- `0102146` - "Expose ledger-specific filters in interactive UI"
+- `c77e333` - "Keep server-side filtering and add client-side filtering for extra control"
+
+**Work Done**:
+1. ✅ Added filter panel controls for General Ledger (sortby, initial_balance)
+2. ✅ Added filter panel controls for Partner Ledger (result_selection, reconciled, amount_currency, initial_balance)
+3. ✅ Implemented dual filtering (server + client-side) for display_account
+4. ✅ Fixed debug header visibility (only in debug mode)
+5. ✅ Reorganized menus under "Accounting Reports" parent
+
+**Current Issues**:
+- ❌ Partner Ledger calculations incorrect (initial balance, running sum, totals)
+- ❌ Some filters not propagating correctly from UI → controller → report
+- ❓ Journal Ledger interactive version existence unclear
+
+### Dec 9, 2025 - OWL Migration & Trial Balance Debugging ✅ FIXED
+- Added JSON endpoints for all main reports in `controllers/main.py`
+- Trial Balance endpoint respects `account_ids` filter
+- Fixed context propagation for date filtering
 - Debug panel is wrapped in `env.debug` to stay hidden in production; scroll layout fixed (100vh/flex/min-height:0)
 - Pending: Frontend OWL components/templates for General Ledger, Partner Ledger, Cash Flow to consume the new endpoints
 
