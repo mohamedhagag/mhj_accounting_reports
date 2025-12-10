@@ -163,9 +163,11 @@
             <!-- Content Area -->
             <div class="o_content mhj_report_content" style="padding: 20px; background: white; overflow-y: auto;">
                 <!-- Debug info -->
-                <div style="font-size: 10px; color: #999; margin-bottom: 10px;">
-                    Loading: <t t-esc="state.loading"/> | Has Data: <t t-esc="!!state.reportData"/> | Constructor: <t t-esc="constructor.name"/>
-                </div>
+                <t t-if="env.debug">
+                    <div style="font-size: 10px; color: #999; margin-bottom: 10px;">
+                        Loading: <t t-esc="state.loading"/> | Has Data: <t t-esc="!!state.reportData"/> | Constructor: <t t-esc="constructor.name"/>
+                    </div>
+                </t>
                 <t t-if="state.loading">
                     <div class="text-center p-5">
                         <i class="fa fa-spinner fa-spin fa-3x text-primary"/>
