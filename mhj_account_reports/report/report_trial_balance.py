@@ -21,9 +21,14 @@ class ReportTrialBalance(models.AbstractModel):
         
         # Get balance before date_from
         ctx = dict(self.env.context)
-        ctx['date_to'] = date_from
-        ctx['date_from'] = False
-        ctx['initial_bal'] = True
+        # Initial balance should include everything strictly before date_from
+        # Use initial_bal flag but avoid overlapping date filters from context
+        ctx.update({
+            'date_from': False,
+            'date_to': False,
+            'initial_bal': True,
+            'strict_range': False,
+        })
         
         tables, where_clause, where_params = self.env['account.move.line'].with_context(ctx)._query_get()
         tables = tables.replace('"', '')
@@ -69,7 +74,10 @@ class ReportTrialBalance(models.AbstractModel):
         account_result = {}
         
         # Prepare optimized sql query for current period
-        tables, where_clause, where_params = self.env['account.move.line']._query_get()
+        # Use the report context (date range, target_move, etc.) for current period
+        current_ctx = dict(self.env.context)
+        current_ctx.setdefault('strict_range', True)
+        tables, where_clause, where_params = self.env['account.move.line'].with_context(current_ctx)._query_get()
         tables = tables.replace('"', '')
         if not tables:
             tables = 'account_move_line'
