@@ -634,7 +634,7 @@
                     <!-- Assets Column -->
                     <div class="col-lg-6">
                         <div class="card">
-                            <div class="card-header bg-primary text-white">
+                            <div class="card-header" style="background-color: #e3f2fd; color: #1976d2;">
                                 <h5>Assets</h5>
                             </div>
                             <div class="card-body">
@@ -669,7 +669,7 @@
                     <!-- Liabilities &amp; Equity Column -->
                     <div class="col-lg-6">
                         <div class="card">
-                            <div class="card-header bg-danger text-white">
+                            <div class="card-header" style="background-color: #ffebee; color: #c62828;">
                                 <h5>Liabilities &amp; Equity</h5>
                             </div>
                             <div class="card-body">
