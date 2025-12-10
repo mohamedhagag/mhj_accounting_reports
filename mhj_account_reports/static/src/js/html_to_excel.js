@@ -299,6 +299,7 @@ export class HtmlToExcelConverter {
      * Internal: Apply cell styling from HTML attributes
      */
     _applyCellStyles(worksheet, tableElement, rowCount) {
+        // Use Excel built-in format codes and custom format strings
         const styles = {
             header: {
                 font: { bold: true, color: { rgb: 'FFFFFFFF' } },
@@ -310,7 +311,7 @@ export class HtmlToExcelConverter {
                 font: { bold: true },
                 fill: { fgColor: { rgb: 'FFEEEEEE' } },
                 alignment: { horizontal: 'right', vertical: 'center' },
-                numFmt: '#,##0.00',
+                numFmt: '#,##0.00',  // Custom number format with thousands separator
                 border: this._getBorder()
             },
             section: {
@@ -321,12 +322,12 @@ export class HtmlToExcelConverter {
             },
             number: {
                 alignment: { horizontal: 'right', vertical: 'center' },
-                numFmt: '#,##0.00',
+                numFmt: '#,##0.00',  // Custom number format with thousands separator
                 border: this._getBorder()
             },
             currency: {
                 alignment: { horizontal: 'right', vertical: 'center' },
-                numFmt: '#,##0.00;-#,##0.00',  // Format with thousands separator and 2 decimals
+                numFmt: '#,##0.00',  // Custom number format with thousands separator
                 border: this._getBorder()
             }
         };
@@ -344,11 +345,16 @@ export class HtmlToExcelConverter {
 
             cells.forEach((cell) => {
                 const cellRef = this.XLSX.utils.encode_cell({ r, c: colIndex });
+                const cellValue = worksheet[cellRef];
                 
+                if (!cellValue) {
+                    colIndex += parseInt(cell.getAttribute('colspan') || '1');
+                    return;
+                }
+
                 // Determine style based on element classes
                 let style = {};
                 const classes = cell.className;
-                const cellValue = worksheet[cellRef];
 
                 if (cell.tagName === 'TH' || classes.includes('table-primary') || classes.includes('table-dark')) {
                     style = styles.header;
@@ -358,13 +364,18 @@ export class HtmlToExcelConverter {
                     style = styles.section;
                 } else if (classes.includes('text-end') || numericColumns.has(colIndex)) {
                     // Use currency format for right-aligned or numeric columns
-                    style = styles.currency;
-                } else if (typeof cellValue?.v === 'number') {
+                    style = { ...styles.currency };
+                    // Ensure the format is applied to numeric values
+                    if (typeof cellValue.v === 'number') {
+                        style.numFmt = '#,##0.00';
+                    }
+                } else if (typeof cellValue.v === 'number') {
                     // Apply number format to any numeric cell
-                    style = styles.currency;
+                    style = { ...styles.currency };
+                    style.numFmt = '#,##0.00';
                 }
 
-                if (Object.keys(style).length > 0 && cellValue) {
+                if (Object.keys(style).length > 0) {
                     cellValue.s = style;
                 }
 
