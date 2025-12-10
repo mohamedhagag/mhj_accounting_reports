@@ -365,6 +365,15 @@
                     </div>
                 </div>
 
+                <!-- Chart Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas t-ref="chart"/>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
@@ -438,6 +447,15 @@
                     </div>
                 </div>
 
+                <!-- Chart Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas t-ref="chart"/>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
@@ -497,6 +515,15 @@
                     <div class="card-header">
                         <h3>Cash Flow Statement</h3>
                         <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas t-ref="chart"/>
+                        </div>
                     </div>
                 </div>
 
@@ -594,6 +621,15 @@
                     </div>
                 </div>
 
+                <!-- Chart Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas t-ref="chart"/>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <!-- Assets Column -->
                     <div class="col-lg-6">
@@ -674,6 +710,15 @@
                     <div class="card-header">
                         <h3>Profit &amp; Loss Statement</h3>
                         <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas t-ref="chart"/>
+                        </div>
                     </div>
                 </div>
 
