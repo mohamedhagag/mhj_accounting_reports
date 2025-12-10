@@ -29,17 +29,21 @@ export class CashFlowReport extends FinancialReportBase {
         if (!this.chartRef.el || !window.Chart) return;
 
         const data = this.state.reportData;
-        if (!data || !data.lines || data.lines.length === 0) return;
+        if (!data) return;
 
-        // Group by activity type (operating, investing, financing)
+        // Build sections from aggregated totals (more reliable than line-level data)
         const sections = {};
-        (data.lines || []).forEach(line => {
-            const type = line.type || 'Other';
-            if (!sections[type]) {
-                sections[type] = 0;
+        const addSection = (label, value) => {
+            const numeric = parseFloat(value || 0);
+            if (!isNaN(numeric)) {
+                sections[label] = numeric;
             }
-            sections[type] += parseFloat(line.balance || 0);
-        });
+        };
+
+        addSection('Operating', data.net_operating ?? this._sumObjectValues(data.operating));
+        addSection('Investing', data.net_investing ?? this._sumObjectValues(data.investing));
+        addSection('Financing', data.net_financing ?? this._sumObjectValues(data.financing));
+        addSection('Unclassified', data.unclassified);
 
         const ctx = this.chartRef.el.getContext('2d');
         
@@ -91,6 +95,10 @@ export class CashFlowReport extends FinancialReportBase {
                 }
             }
         });
+    }
+
+    _sumObjectValues(obj = {}) {
+        return Object.values(obj || {}).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
     }
 
     async loadReport() {

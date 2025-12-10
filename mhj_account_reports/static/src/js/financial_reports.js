@@ -315,17 +315,23 @@ export class FinancialReportBase extends Component {
     }
 
     getAssetLines() {
-        // Default fallback for Balance Sheet - return asset lines from reportData
+        // Fallback: prefer explicit assets, else use raw lines
         if (this.state?.reportData?.assets) {
             return this.state.reportData.assets;
+        }
+        if (this.state?.reportData?.lines) {
+            return this.state.reportData.lines;
         }
         return [];
     }
 
     getLiabilityLines() {
-        // Default fallback for Balance Sheet - return liability lines from reportData
+        // Fallback: prefer explicit liabilities, else use raw lines
         if (this.state?.reportData?.liabilities) {
             return this.state.reportData.liabilities;
+        }
+        if (this.state?.reportData?.lines) {
+            return this.state.reportData.lines;
         }
         return [];
     }
