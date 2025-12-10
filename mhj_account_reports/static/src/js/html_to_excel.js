@@ -310,6 +310,7 @@ export class HtmlToExcelConverter {
                 font: { bold: true },
                 fill: { fgColor: { rgb: 'FFEEEEEE' } },
                 alignment: { horizontal: 'right', vertical: 'center' },
+                numFmt: '#,##0.00',
                 border: this._getBorder()
             },
             section: {
@@ -322,10 +323,18 @@ export class HtmlToExcelConverter {
                 alignment: { horizontal: 'right', vertical: 'center' },
                 numFmt: '#,##0.00',
                 border: this._getBorder()
+            },
+            currency: {
+                alignment: { horizontal: 'right', vertical: 'center' },
+                numFmt: '#,##0.00;-#,##0.00',  // Format with thousands separator and 2 decimals
+                border: this._getBorder()
             }
         };
 
-        // Apply styles cell by cell
+        // First pass: detect which columns contain numeric data
+        const numericColumns = this._detectNumericColumns(tableElement, rowCount);
+
+        // Second pass: Apply styles cell by cell
         for (let r = 0; r < rowCount; r++) {
             const tr = tableElement.querySelectorAll('tr')[r];
             if (!tr) continue;
@@ -339,6 +348,7 @@ export class HtmlToExcelConverter {
                 // Determine style based on element classes
                 let style = {};
                 const classes = cell.className;
+                const cellValue = worksheet[cellRef];
 
                 if (cell.tagName === 'TH' || classes.includes('table-primary') || classes.includes('table-dark')) {
                     style = styles.header;
@@ -346,17 +356,69 @@ export class HtmlToExcelConverter {
                     style = styles.total;
                 } else if (classes.includes('table-')) {
                     style = styles.section;
-                } else if (classes.includes('text-end')) {
-                    style = styles.number;
+                } else if (classes.includes('text-end') || numericColumns.has(colIndex)) {
+                    // Use currency format for right-aligned or numeric columns
+                    style = styles.currency;
+                } else if (typeof cellValue?.v === 'number') {
+                    // Apply number format to any numeric cell
+                    style = styles.currency;
                 }
 
-                if (Object.keys(style).length > 0 && worksheet[cellRef]) {
-                    worksheet[cellRef].s = style;
+                if (Object.keys(style).length > 0 && cellValue) {
+                    cellValue.s = style;
                 }
 
                 colIndex += parseInt(cell.getAttribute('colspan') || '1');
             });
         }
+    }
+
+    /**
+     * Internal: Detect which columns contain numeric data
+     */
+    _detectNumericColumns(tableElement, rowCount) {
+        const numericColumns = new Set();
+        const minNumericRows = Math.max(2, Math.floor(rowCount * 0.5)); // At least 50% of rows should be numeric
+        const columnStats = {}; // Track numeric count per column
+
+        for (let r = 0; r < rowCount; r++) {
+            const tr = tableElement.querySelectorAll('tr')[r];
+            if (!tr) continue;
+
+            const cells = tr.querySelectorAll('td, th');
+            let colIndex = 0;
+
+            cells.forEach((cell) => {
+                // Skip header rows
+                if (r === 0 && cell.tagName === 'TH') {
+                    return;
+                }
+
+                const text = cell.textContent.trim();
+                const isNumeric = /^[-+]?[\d,]+\.?\d*$/.test(text); // Pure number
+                const isCurrency = /^[-+]?[\d,]+\.?\d*\s*[%€$£¥₹]?$/i.test(text); // Currency
+                const isRightAligned = cell.className.includes('text-end') || 
+                                      window.getComputedStyle(cell).textAlign === 'right';
+
+                if (isNumeric || isCurrency || isRightAligned) {
+                    if (!columnStats[colIndex]) {
+                        columnStats[colIndex] = 0;
+                    }
+                    columnStats[colIndex]++;
+                }
+
+                colIndex += parseInt(cell.getAttribute('colspan') || '1');
+            });
+        }
+
+        // Mark columns as numeric if they have enough numeric data
+        for (const [colIndex, count] of Object.entries(columnStats)) {
+            if (count >= minNumericRows) {
+                numericColumns.add(parseInt(colIndex));
+            }
+        }
+
+        return numericColumns;
     }
 
     /**
