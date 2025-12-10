@@ -139,8 +139,8 @@ export class FinancialReportBase extends Component {
 
     getVisibleAccounts(accounts = []) {
         const mode = this.state.filters?.display_account || 'all';
-        const currency = this.state.reportData?.currency || null;
 
+        // Apply extra client-side filtering on top of server-side filtering
         return accounts.filter((acc) => {
             const debit = acc.debit || 0;
             const credit = acc.credit || 0;
@@ -148,18 +148,17 @@ export class FinancialReportBase extends Component {
             const hasLines = Array.isArray(acc.move_lines) && acc.move_lines.length > 0;
             const hasActivity = hasLines || debit !== 0 || credit !== 0 || balance !== 0;
 
+            // 'movement': hide accounts with no activity
             if (mode === 'movement') {
                 return hasActivity;
             }
 
+            // 'not_zero': hide accounts with zero balance
             if (mode === 'not_zero') {
-                // Fall back to simple check if currency object isn't available client side
-                if (!currency || typeof currency.is_zero !== 'function') {
-                    return balance !== 0;
-                }
-                return !currency.is_zero(balance);
+                return balance !== 0;
             }
 
+            // 'all': show everything
             return true;
         });
     }
