@@ -246,6 +246,129 @@ export class FinancialReportBase extends Component {
     }
 
     async printReport() {
-        this.notification.add("Print functionality coming soon", { type: "info" });
+        try {
+            // Get the current report element
+            const reportElement = this.root.el?.querySelector('.financial-report-container');
+            if (!reportElement) {
+                this.notification.add("Report container not found", { type: "warning" });
+                return;
+            }
+
+            // Get report type and generate title
+            const reportType = this.constructor.name.replace('Report', '').replace(/([A-Z])/g, ' $1').trim();
+            const reportTitle = `${reportType} - ${new Date().toLocaleDateString()}`;
+
+            // Create a hidden print container with the report content
+            const printContainer = document.createElement('div');
+            printContainer.id = `print-report-${Date.now()}`;
+            printContainer.style.display = 'none';
+            
+            // Clone the report content
+            const clonedContent = reportElement.cloneNode(true);
+            
+            // Create print-friendly HTML structure
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${reportTitle}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body {
+                            font-family: Arial, Helvetica, sans-serif;
+                            font-size: 11px;
+                            line-height: 1.4;
+                            color: #333;
+                            background: white;
+                            padding: 20px;
+                        }
+                        .print-header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 10px;
+                        }
+                        .print-header h1 {
+                            font-size: 16px;
+                            margin-bottom: 5px;
+                        }
+                        .print-header p {
+                            font-size: 10px;
+                            color: #666;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 10px 0;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: right;
+                        }
+                        th {
+                            background-color: #f5f5f5;
+                            font-weight: bold;
+                            text-align: left;
+                        }
+                        td:first-child, th:first-child {
+                            text-align: left;
+                        }
+                        .number {
+                            text-align: right;
+                            font-family: 'Courier New', monospace;
+                        }
+                        .level-0 { background-color: #f0f0f0; font-weight: bold; }
+                        .level-1 { background-color: #f9f9f9; padding-left: 20px; }
+                        .level-2 { padding-left: 40px; }
+                        .total-row { background-color: #e8e8e8; font-weight: bold; border-top: 2px solid #333; }
+                        .subtotal-row { background-color: #f5f5f5; font-weight: bold; }
+                        canvas { display: none; }
+                        .financial-report-container > div {
+                            page-break-inside: avoid;
+                        }
+                        @media print {
+                            body { padding: 0; margin: 0; }
+                            .print-button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h1>${reportTitle}</h1>
+                        <p>Generated on ${new Date().toLocaleString()}</p>
+                    </div>
+                    <div class="print-content">
+                        ${clonedContent.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                this.notification.add("Unable to open print window. Please check pop-up blocker settings.", { type: "warning" });
+                return;
+            }
+
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+            // Trigger print dialog after content is loaded
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    // Optionally close the window after printing
+                    // printWindow.close();
+                }, 250);
+            };
+
+            this.notification.add("Opening print preview...", { type: "info" });
+        } catch (error) {
+            console.error('Print error:', error);
+            this.notification.add(`Error preparing report for printing: ${error.message}`, { type: "danger" });
+        }
     }
 }
