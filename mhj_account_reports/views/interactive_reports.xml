@@ -31,6 +31,12 @@
         <field name="target">current</field>
     </record>
 
+    <record id="action_profit_loss_interactive" model="ir.actions.client">
+        <field name="name">Profit &amp; Loss (Interactive)</field>
+        <field name="tag">mhj_profit_loss_interactive</field>
+        <field name="target">current</field>
+    </record>
+
     <!-- Interactive Reports Menu Items -->
     <menuitem id="menu_trial_balance_interactive"
               name="Trial Balance"
@@ -64,6 +70,13 @@
               name="Cash Flow"
               sequence="50"
               action="action_cash_flow_interactive"
+              parent="menu_interactive_reports_root"
+              groups="account.group_account_manager,account.group_account_user"/>
+
+    <menuitem id="menu_profit_loss_interactive"
+              name="Profit &amp; Loss"
+              sequence="60"
+              action="action_profit_loss_interactive"
               parent="menu_interactive_reports_root"
               groups="account.group_account_manager,account.group_account_user"/>
 

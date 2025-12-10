@@ -31,6 +31,7 @@
 - ✅ Partner Ledger (calculations now correct)
 - ✅ Cash Flow
 - ✅ Balance Sheet
+- ✅ Profit & Loss (NEW - just added)
 - ❌ Journal Ledger (not implemented for interactive mode)
 
 ---

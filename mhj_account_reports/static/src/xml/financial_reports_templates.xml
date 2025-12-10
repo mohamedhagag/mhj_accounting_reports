@@ -672,4 +672,49 @@
         </div>
     </t>
 
+    <!-- Profit & Loss Content -->
+    <t t-name="mhj_account_reports.ProfitLossReportContent">
+        <div class="mhj_financial_report">
+            <t t-if="state.reportData">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Profit &amp; Loss Statement</h3>
+                        <p class="mb-0">Period: <t t-esc="state.reportData.date_from"/> to <t t-esc="state.reportData.date_to"/></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 60%;">Description</th>
+                                        <th class="text-end" style="width: 40%;"><t t-esc="state.reportData.currency_symbol"/></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line.id || line_index">
+                                        <tr t-att-class="'fw-bold text-primary' if line.get('type') == 'report' else ('text-muted small' if line.get('type') == 'accounts' else '')">
+                                            <td>
+                                                <span t-att-style="'padding-left:' + this.getLineIndent(line.get('level', 0)) + 'px;'"/>
+                                                <t t-esc="line.get('name')"/>
+                                            </td>
+                                            <td class="text-end" t-att-class="'fw-bold' if line.get('type') == 'report' else ''">
+                                                <t t-esc="this.formatNumber(line.get('balance', 0))"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="alert alert-warning">No data available for the selected filters.</div>
+            </t>
+        </div>
+    </t>
+
 </templates>

@@ -40,6 +40,8 @@ class AccountingReportsController(http.Controller):
                 return self._get_cash_flow_data(filters)
             elif report_type == 'balance_sheet':
                 return self._get_balance_sheet_data(filters)
+            elif report_type == 'profit_loss':
+                return self._get_profit_loss_data(filters)
             else:
                 return {'error': 'Invalid report type'}
                 
@@ -488,4 +490,64 @@ class AccountingReportsController(http.Controller):
             'date_to': filters.get('date_to'),
         }
         _logger.info(f"Balance sheet lines: {len(lines)}")
+        return response
+
+    def _get_profit_loss_data(self, filters):
+        """Get Profit & Loss report data using existing financial report model."""
+        _logger.info(f"_get_profit_loss_data called with filters: {filters}")
+        report_model = request.env['report.mhj_account_reports.report_financial']
+
+        # Locate the P&L financial report definition
+        profit_loss = request.env.ref('mhj_account_reports.account_financial_report_pl0', raise_if_not_found=False)
+        if not profit_loss:
+            profit_loss = request.env['account.financial.report'].search([('name', 'ilike', 'Profit'), ('parent_id', '=', False)], limit=1)
+        if not profit_loss:
+            return {'error': 'Profit & Loss definition not found'}
+
+        used_context = {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+        }
+
+        data = {
+            'form': {
+                'account_report_id': [profit_loss.id, profit_loss.name],
+                'enable_filter': False,
+                'label_filter': '',
+                'debit_credit': False,
+                'filter_cmp': 'filter_no',
+                'date_from_cmp': False,
+                'date_to_cmp': False,
+                'comparison_context': {},
+                'target_move': filters.get('state', 'posted'),
+                'date_from': filters.get('date_from'),
+                'date_to': filters.get('date_to'),
+                'journal_ids': filters.get('journal_ids', []),
+                'used_context': used_context,
+            },
+            'model': 'account.financial.report',
+            'ids': [profit_loss.id],
+        }
+
+        ctx = dict(request.env.context, **used_context)
+        ctx['active_model'] = 'account.financial.report'
+        ctx['active_id'] = profit_loss.id
+        ctx['active_ids'] = [profit_loss.id]
+
+        result = report_model.with_context(ctx)._get_report_values([], data)
+        lines = result.get('get_account_lines', []) if result else []
+
+        response = {
+            'lines': lines,
+            'company': request.env.company.name,
+            'currency_symbol': request.env.company.currency_id.symbol,
+            'date_from': filters.get('date_from'),
+            'date_to': filters.get('date_to'),
+        }
+        _logger.info(f"Profit & Loss lines: {len(lines)}")
+        return response
         return response
