@@ -694,14 +694,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="state.reportData.lines or []" t-as="line" t-key="line.id || line_index">
-                                        <tr t-att-class="'fw-bold text-primary' if line.get('type') == 'report' else ('text-muted small' if line.get('type') == 'accounts' else '')">
+                                    <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line.id || line_index">
+                                        <tr t-att-class="line.type === 'report' ? 'fw-bold text-primary' : (line.type === 'accounts' ? 'text-muted small' : '')">
                                             <td>
-                                                <span t-att-style="'padding-left:' + this.getLineIndent(line.get('level', 0)) + 'px;'"/>
-                                                <t t-esc="line.get('name')"/>
+                                                <span t-att-style="'padding-left:' + this.getLineIndent(line.level || 0) + 'px;'"/>
+                                                <t t-esc="line.name"/>
                                             </td>
-                                            <td class="text-end" t-att-class="'fw-bold' if line.get('type') == 'report' else ''">
-                                                <t t-esc="this.formatNumber(line.get('balance', 0))"/>
+                                            <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''">
+                                                <t t-esc="this.formatNumber(line.balance || 0)"/>
                                             </td>
                                         </tr>
                                     </t>
