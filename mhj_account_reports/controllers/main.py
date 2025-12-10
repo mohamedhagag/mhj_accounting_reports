@@ -647,8 +647,6 @@ class AccountingReportsController(http.Controller):
             'view_mode': 'list,form',
             'views': [
                 [False, 'list'],
-                [False, 'tree'],
-                [False, 'kanban'],
                 [False, 'form'],
             ],
             'domain': domain,
