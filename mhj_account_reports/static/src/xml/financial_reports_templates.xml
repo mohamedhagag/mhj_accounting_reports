@@ -288,14 +288,16 @@
                     </div>
                 </div>
 
-                <!-- Chart Card -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 300px;">
-                            <canvas t-ref="chart"/>
+                <!-- Chart Card - Hidden when filters applied -->
+                <t t-if="(state.filters?.account_ids?.length || 0) === 0 and (state.filters?.partner_ids?.length || 0) === 0">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas t-ref="chart" style="display: block;"/>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </t>
 
                 <!-- Data Table Card -->
                 <div class="card">
@@ -634,14 +636,16 @@
                     </div>
                 </div>
 
-                <!-- Chart Card -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 400px;">
-                            <canvas t-ref="chart"/>
+                <!-- Chart Card - Hidden when filters applied -->
+                <t t-if="(state.filters?.account_ids?.length || 0) === 0 and (state.filters?.partner_ids?.length || 0) === 0">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 400px;">
+                                <canvas t-ref="chart" style="display: block;"/>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </t>
 
                 <div class="row">
                     <!-- Assets Column -->
@@ -718,14 +722,16 @@
                     </div>
                 </div>
 
-                <!-- Chart Card -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="chart-container" style="position: relative; height: 400px;">
-                            <canvas t-ref="chart"/>
+                <!-- Chart Card - Hidden when filters applied -->
+                <t t-if="(state.filters?.account_ids?.length || 0) === 0 and (state.filters?.partner_ids?.length || 0) === 0">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 400px;">
+                                <canvas t-ref="chart" style="display: block;"/>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </t>
 
                 <div class="card">
                     <div class="card-body">
