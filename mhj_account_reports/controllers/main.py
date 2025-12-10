@@ -458,12 +458,13 @@ class AccountingReportsController(http.Controller):
         if not balance_sheet:
             return {'error': 'Balance Sheet definition not found'}
 
+        # Balance Sheet should be computed as of date_to; keep date_from unset and strict_range False
         used_context = {
             'journal_ids': filters.get('journal_ids') or False,
             'state': filters.get('state', 'posted'),
-            'date_from': filters.get('date_from') or False,
+            'date_from': False,
             'date_to': filters.get('date_to') or False,
-            'strict_range': True if filters.get('date_from') else False,
+            'strict_range': False,
             'company_id': request.env.company.id,
         }
 
@@ -478,7 +479,7 @@ class AccountingReportsController(http.Controller):
                 'date_to_cmp': False,
                 'comparison_context': {},
                 'target_move': filters.get('state', 'posted'),
-                'date_from': filters.get('date_from'),
+                'date_from': False,
                 'date_to': filters.get('date_to'),
                 'journal_ids': filters.get('journal_ids', []),
                 'used_context': used_context,
