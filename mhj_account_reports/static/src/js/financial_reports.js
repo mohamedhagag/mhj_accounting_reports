@@ -276,8 +276,12 @@ export class FinancialReportBase extends Component {
 
     async printReport() {
         try {
-            // Get the current report element
-            const reportElement = this.root.el?.querySelector('.financial-report-container');
+            // Get the current report element (fallbacks for interactive layout)
+            const host = this.el || (this.root && this.root.el);
+            const reportElement = host?.querySelector('.financial-report-container')
+                || host?.querySelector('.mhj_financial_report')
+                || host?.querySelector('.mhj_report_content')
+                || host?.querySelector('.o_content');
             if (!reportElement) {
                 this.notification.add("Report container not found", { type: "warning" });
                 return;
