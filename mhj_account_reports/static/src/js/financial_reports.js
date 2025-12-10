@@ -147,8 +147,9 @@ export class FinancialReportBase extends Component {
         // Apply extra client-side filtering on top of server-side filtering
         return accounts.filter((acc) => {
             // If specific accounts are selected, show only those
+            // Check both id and code since accounts may use either
             if (selectedAccountIds.length > 0) {
-                return selectedAccountIds.includes(acc.id);
+                return selectedAccountIds.includes(acc.id) || selectedAccountIds.includes(parseInt(acc.code));
             }
 
             const debit = acc.debit || 0;
