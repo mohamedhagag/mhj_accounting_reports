@@ -310,6 +310,10 @@ export class FinancialReportBase extends Component {
                     <title>${reportTitle}</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
+                        @page {
+                            size: A4 landscape;
+                            margin: 12mm;
+                        }
                         body {
                             font-family: Arial, Helvetica, sans-serif;
                             font-size: 11px;
