@@ -257,7 +257,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="state.reportData.accounts" t-as="account" t-key="account.id || account_index">
+                                    <t t-foreach="this.getVisibleAccounts(state.reportData.accounts || [])" t-as="account" t-key="account.id || account_index">
                                         <tr>
                                             <td><t t-esc="account.code"/></td>
                                             <td><t t-esc="account.name"/></td>
@@ -323,7 +323,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="state.reportData.accounts" t-as="account" t-key="account.id || account.code || account_index">
+                                    <t t-foreach="this.getVisibleAccounts(state.reportData.accounts || [])" t-as="account" t-key="account.id || account.code || account_index">
                                         <tr class="table-primary" t-on-click="() => this.toggleAccount(account.id || account.code)">
                                             <td class="toggle-cell">
                                                 <i class="fa" t-att-class="this.isExpanded(account.id || account.code) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>

@@ -137,6 +137,33 @@ export class FinancialReportBase extends Component {
         }
     }
 
+    getVisibleAccounts(accounts = []) {
+        const mode = this.state.filters?.display_account || 'all';
+        const currency = this.state.reportData?.currency || null;
+
+        return accounts.filter((acc) => {
+            const debit = acc.debit || 0;
+            const credit = acc.credit || 0;
+            const balance = acc.balance || 0;
+            const hasLines = Array.isArray(acc.move_lines) && acc.move_lines.length > 0;
+            const hasActivity = hasLines || debit !== 0 || credit !== 0 || balance !== 0;
+
+            if (mode === 'movement') {
+                return hasActivity;
+            }
+
+            if (mode === 'not_zero') {
+                // Fall back to simple check if currency object isn't available client side
+                if (!currency || typeof currency.is_zero !== 'function') {
+                    return balance !== 0;
+                }
+                return !currency.is_zero(balance);
+            }
+
+            return true;
+        });
+    }
+
     async applyFilters() {
         await this.loadReport();
         this.state.showFilters = false;
