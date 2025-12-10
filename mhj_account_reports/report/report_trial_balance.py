@@ -23,9 +23,11 @@ class ReportTrialBalance(models.AbstractModel):
         ctx = dict(self.env.context)
         # Initial balance should include everything strictly before date_from
         # Use initial_bal flag but avoid overlapping date filters from context
+        # For initial balance we want all moves strictly before date_from.
+        # Use date_to = date_from (exclusive in SQL filter) and no date_from lower bound.
         ctx.update({
             'date_from': False,
-            'date_to': False,
+            'date_to': date_from,
             'initial_bal': True,
             'strict_range': False,
         })
