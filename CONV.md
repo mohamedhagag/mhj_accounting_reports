@@ -1,8 +1,82 @@
 # Conversation Log & Development Guide
 
 **Started**: December 9, 2025  
-**Last Updated**: December 10, 2025 - Interactive Reports Filter Fix Session  
-**Session**: Interactive Reports - Complete Filter Implementation & Partner Ledger Fix
+**Last Updated**: December 10, 2025 - Full Day Session: Filter Fixes + UI Improvements + P&L Report  
+**Session**: Interactive Reports - Comprehensive Filter Implementation, UI Redesign & New Report
+
+---
+
+## SESSION SUMMARY (Dec 10, 2025 - COMPLETE)
+
+### Accomplishments
+1. ✅ **Fixed Interactive Reports Filtering** - All 5 main reports now honor all filter selections
+2. ✅ **Fixed Partner Ledger Calculations** - Initial balance, running sum, and totals now correct
+3. ✅ **Compacted Filter Panel** - Removed dropdown lists, kept search inputs
+4. ✅ **Added Odoo-Style Searchable Dropdowns** - Search filters appear on typing (like Odoo)
+5. ✅ **Created Interactive P&L Report** - New profit & loss statement with hierarchical display
+6. ✅ **Updated Documentation** - CONV.md now complete with session history
+
+### Commits Pushed
+| Commit | Message |
+|--------|---------|
+| `4092c5f` | Fix interactive reports filtering & Partner Ledger calculations |
+| `518c19a` | Compact filter panel by hiding dropdown lists |
+| `2a7dd5d` | Add Odoo-style searchable dropdowns to filter panel |
+| `ebd85e6` | Add interactive Profit & Loss report |
+
+### Problem Resolution
+
+**Issue 1: Partial/Broken Filtering**
+- **Root Cause**: Context not properly propagating account_ids, partner_ids, analytic_account_ids
+- **Solution**: Added explicit context assignment in all controller methods (TB, GL, PL)
+- **Files Modified**: `controllers/main.py`
+- **Status**: ✅ FIXED
+
+**Issue 2: Partner Ledger Calculation Errors**
+- **Root Causes**: 
+  - Initial balance query missing journal filter
+  - _sum_partner() removing date_from (calculating all-time instead of period totals)
+- **Solutions**:
+  - Added journal filter to _get_partner_initial_balance()
+  - Preserved date_from in _sum_partner() context
+  - Added analytic_account_ids to context
+- **Files Modified**: `report/report_partner_ledger.py`, `controllers/main.py`
+- **Status**: ✅ FIXED
+
+**Issue 3: Filter Panel Too Large**
+- **Root Cause**: Dropdown lists showing 4 items under each search field
+- **Solution**: Hid dropdown lists when not typing, show on search (conditional rendering)
+- **Files Modified**: `static/src/xml/financial_reports_templates.xml`
+- **Result**: Compact panel with Odoo-style search behavior
+
+**Issue 4: No P&L Report**
+- **Solution**: Created complete interactive P&L report using existing financial report model
+- **Files Created**: `static/src/js/profit_loss_report.js`
+- **Files Modified**: `controllers/main.py`, `views/interactive_reports.xml`, `static/src/xml/financial_reports_templates.xml`, `CONV.md`
+- **Status**: ✅ COMPLETE
+
+### Current Interactive Reports (6 total)
+- ✅ **Trial Balance** - Full account hierarchy with debit/credit/balance
+- ✅ **General Ledger** - Account movements with optional initial balance
+- ✅ **Partner Ledger** - Partner-centric view with running balance
+- ✅ **Cash Flow** - Operating/Investing/Financing activities
+- ✅ **Balance Sheet** - Assets vs Liabilities & Equity (2-column layout)
+- ✅ **Profit & Loss** - Hierarchical income statement (NEW)
+
+### All Filter Options Now Working
+**Common Filters** (all reports):
+- ✅ Date range (date_from, date_to)
+- ✅ Entry status (posted/all)
+- ✅ Journals (multi-select searchable)
+- ✅ Accounts (multi-select searchable)
+- ✅ Partners (multi-select searchable)
+- ✅ Analytic Accounts (multi-select searchable)
+- ✅ Display Account Mode (all/movement/not_zero)
+
+**Report-Specific Filters**:
+- **General Ledger**: Sort Order + Initial Balance checkbox
+- **Partner Ledger**: Partner Type + Reconciled + Currency + Initial Balance
+- **All Others**: Standard filters only
 
 ---
 
@@ -13,6 +87,8 @@
 1. ✅ All filter options now propagate correctly to all interactive ledger reports
 2. ✅ Partner Ledger calculations fixed (initial balance, running sum, totals)
 3. ✅ Verified Journal Ledger does NOT have interactive version (documented as missing)
+4. ✅ Filter panel redesigned with Odoo-style search dropdowns
+5. ✅ New interactive P&L report created
 
 ### Fixes Applied
 **Partner Ledger Calculations** (`report/report_partner_ledger.py`):
@@ -24,15 +100,13 @@
 1. Trial Balance: Added explicit context assignment for account_ids, partner_ids, analytic_account_ids
 2. General Ledger: Ensured all filter IDs are properly set in context
 3. Partner Ledger: Added analytic_account_ids and account_ids to context
+4. Profit & Loss: New endpoint with full filter support
 
-**Interactive Reports Status**:
-- ✅ Trial Balance (5 reports total)
-- ✅ General Ledger
-- ✅ Partner Ledger (calculations now correct)
-- ✅ Cash Flow
-- ✅ Balance Sheet
-- ✅ Profit & Loss (NEW - just added)
-- ❌ Journal Ledger (not implemented for interactive mode)
+**Filter Panel UI** (`static/src/xml/financial_reports_templates.xml`):
+1. Dropdowns appear only when typing (searchable like Odoo)
+2. Max height 200px with scroll for long lists
+3. Shows selection count + clear button
+4. Compact design without pre-populated dropdown items
 
 ---
 
@@ -44,7 +118,7 @@
 - **Purpose**: Comprehensive financial reporting with performance optimizations for millions of journal items
 - **Target**: Hajjaj.Pro accounting solution with Excel export support
 - **Branch**: 18-dyn
-- **Interactive Reports**: OWL-based JavaScript components with JSON endpoints
+- **Interactive Reports**: OWL-based JavaScript components with JSON endpoints (6 reports)
 
 ---
 
