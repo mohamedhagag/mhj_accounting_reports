@@ -4,6 +4,7 @@ import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
+import HtmlToExcelConverter from './html_to_excel';
 
 /**
  * Base Financial Report Component
@@ -242,7 +243,35 @@ export class FinancialReportBase extends Component {
     }
 
     async exportExcel() {
-        this.notification.add("Excel export functionality coming soon", { type: "info" });
+        try {
+            this.notification.add("Generating Excel file from report... Please wait.", { type: "info" });
+            
+            // Verify XLSX library is loaded
+            if (!window.XLSX) {
+                throw new Error('XLSX library not loaded. Please ensure SheetJS library is available.');
+            }
+            
+            // Method 1: Convert on-screen HTML tables directly (Preferred)
+            try {
+                const converter = new HtmlToExcelConverter();
+                const reportType = this.constructor.name.replace('Report', '').replace(/([A-Z])/g, ' $1').trim();
+                const workbook = converter.convertEntireReportToWorkbook(
+                    `${reportType} - ${new Date().toLocaleDateString()}`
+                );
+                
+                const filename = `${reportType.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}`;
+                converter.downloadWorkbook(workbook, filename);
+                
+                this.notification.add("Excel file exported successfully!", { type: "success" });
+                return;
+            } catch (htmlError) {
+                console.warn("HTML conversion failed:", htmlError);
+                throw new Error(`Failed to export Excel: ${htmlError.message}`);
+            }
+        } catch (error) {
+            console.error('Excel export error:', error);
+            this.notification.add(`Error exporting Excel: ${error.message}`, { type: "danger" });
+        }
     }
 
     async printReport() {

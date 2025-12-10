@@ -50,7 +50,9 @@
         "web.assets_backend": [
             # External libraries
             "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js",
+            "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
             # Base JavaScript components
+            "mhj_account_reports/static/src/js/html_to_excel.js",
             "mhj_account_reports/static/src/js/financial_reports.js",
             "mhj_account_reports/static/src/js/trial_balance_report.js",
             "mhj_account_reports/static/src/js/general_ledger_report.js",
