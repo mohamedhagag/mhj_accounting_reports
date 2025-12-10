@@ -296,4 +296,21 @@ export class FinancialReportBase extends Component {
     async printReport() {
         await window.print();
     }
+
+    safeRenderChart(canvasRef, chartData) {
+        try {
+            if (!canvasRef || !canvasRef.el) {
+                console.warn('Chart canvas not found');
+                return;
+            }
+            if (!window.Chart) {
+                console.warn('Chart.js library not loaded');
+                return;
+            }
+            // Subclasses should override this method with actual chart rendering logic
+        } catch (error) {
+            console.error('Chart rendering error:', error);
+            // Silently fail - don't break the view
+        }
+    }
 }

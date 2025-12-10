@@ -374,11 +374,11 @@
                     </div>
                 </div>
 
-                <!-- Chart Card -->
+                <!-- Chart Card with Error Handling -->
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="chart-container" style="position: relative; height: 400px;">
-                            <canvas t-ref="chart"/>
+                            <canvas t-ref="chart" style="display: block;"/>
                         </div>
                     </div>
                 </div>
@@ -456,11 +456,11 @@
                     </div>
                 </div>
 
-                <!-- Chart Card -->
+                <!-- Chart Card with Error Handling -->
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="chart-container" style="position: relative; height: 400px;">
-                            <canvas t-ref="chart"/>
+                            <canvas t-ref="chart" style="display: block;"/>
                         </div>
                     </div>
                 </div>
