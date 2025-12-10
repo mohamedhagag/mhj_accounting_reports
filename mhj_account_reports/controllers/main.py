@@ -645,6 +645,12 @@ class AccountingReportsController(http.Controller):
             'name': name or 'Details',
             'res_model': res_model,
             'view_mode': 'list,form',
+            'views': [
+                [False, 'list'],
+                [False, 'tree'],
+                [False, 'kanban'],
+                [False, 'form'],
+            ],
             'domain': domain,
             'target': 'current',
             'context': {
