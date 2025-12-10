@@ -641,23 +641,16 @@
                                 <div class="table-responsive">
                                     <table class="table table-sm table-hover">
                                         <tbody>
-                                            <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
-                                                <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
-                                                <t t-set="isAssetLine" t-value="lineName.includes('asset') || (line.level === 1 &amp;&amp; (line.parent_index || -1) &lt; 0)"/>
-                                                <t t-if="isAssetLine &amp;&amp; lineName === 'assets'">
-                                                    <tr>
-                                                        <td colspan="2"></td>
-                                                    </tr>
-                                                </t>
-                                                <t t-if="!(lineName.includes('liability') || lineName.includes('liabilities') || lineName.includes('profit') || lineName.includes('loss') || lineName.includes('expense') || lineName.includes('income'))">
-                                                    <tr>
-                                                        <td>
-                                                            <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
-                                                            <t t-esc="line.name"/>
-                                                        </td>
-                                                        <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''"><t t-esc="this.formatNumber(line.balance || 0)"/></td>
-                                                    </tr>
-                                                </t>
+                                            <t t-foreach="this.getAssetLines()" t-as="line" t-key="line_index">
+                                                <tr t-att-class="line.type === 'report' ? 'fw-bold' : ''">
+                                                    <td>
+                                                        <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'"/>
+                                                        <t t-esc="line.name"/>
+                                                    </td>
+                                                    <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''">
+                                                        <t t-esc="this.formatNumber(line.balance || 0)"/>
+                                                    </td>
+                                                </tr>
                                             </t>
                                         </tbody>
                                     </table>
@@ -676,17 +669,16 @@
                                 <div class="table-responsive">
                                     <table class="table table-sm table-hover">
                                         <tbody>
-                                            <t t-foreach="state.reportData.lines || []" t-as="line" t-key="line_index">
-                                                <t t-set="lineName" t-value="(line.name || '').toLowerCase()"/>
-                                                <t t-if="lineName.includes('liability') || lineName.includes('liabilities') || lineName.includes('equity') || lineName.includes('profit') || lineName.includes('loss')">
-                                                    <tr>
-                                                        <td>
-                                                            <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'" t-att-class="line.type === 'report' ? 'fw-bold' : ''"/>
-                                                            <t t-esc="line.name"/>
-                                                        </td>
-                                                        <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''"><t t-esc="this.formatNumber(line.balance || 0)"/></td>
-                                                    </tr>
-                                                </t>
+                                            <t t-foreach="this.getLiabilityLines()" t-as="line" t-key="line_index">
+                                                <tr t-att-class="line.type === 'report' ? 'fw-bold' : ''">
+                                                    <td>
+                                                        <span t-att-style="'padding-left:' + ((line.level || 0) * 12) + 'px;'"/>
+                                                        <t t-esc="line.name"/>
+                                                    </td>
+                                                    <td class="text-end" t-att-class="line.type === 'report' ? 'fw-bold' : ''">
+                                                        <t t-esc="this.formatNumber(line.balance || 0)"/>
+                                                    </td>
+                                                </tr>
                                             </t>
                                         </tbody>
                                     </table>
