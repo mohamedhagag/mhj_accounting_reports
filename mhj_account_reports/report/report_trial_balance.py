@@ -134,6 +134,9 @@ class ReportTrialBalance(models.AbstractModel):
                 res['debit'] = account_data.get('debit', 0.0)
                 res['credit'] = account_data.get('credit', 0.0) 
                 res['balance'] = account_data.get('balance', 0.0)
+                res['period_balance'] = res['balance']
+            else:
+                res['period_balance'] = 0.0
             
             # Ending balances (initial + current)
             res['end_debit'] = res['initial_debit'] + res['debit']

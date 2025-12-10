@@ -162,10 +162,13 @@ class AccountingReportsController(http.Controller):
         accounts_data = []
         total_initial_debit = 0.0
         total_initial_credit = 0.0
+        total_initial_balance = 0.0
         total_debit = 0.0
         total_credit = 0.0
+        total_period_balance = 0.0
         total_end_debit = 0.0
         total_end_credit = 0.0
+        total_end_balance = 0.0
         
         for account in result.get('Accounts', []):
             # Skip accounts based on display_account filter
@@ -189,6 +192,7 @@ class AccountingReportsController(http.Controller):
                 'debit': account.get('debit', 0.0),
                 'credit': account.get('credit', 0.0),
                 'balance': account.get('balance', 0.0),
+                'period_balance': account.get('period_balance', account.get('balance', 0.0)),
                 'end_debit': account.get('end_debit', 0.0),
                 'end_credit': account.get('end_credit', 0.0),
                 'end_balance': account.get('end_balance', 0.0),
@@ -196,20 +200,26 @@ class AccountingReportsController(http.Controller):
             
             total_initial_debit += account.get('initial_debit', 0.0)
             total_initial_credit += account.get('initial_credit', 0.0)
+            total_initial_balance += account.get('initial_balance', 0.0)
             total_debit += account.get('debit', 0.0)
             total_credit += account.get('credit', 0.0)
+            total_period_balance += account.get('period_balance', account.get('balance', 0.0))
             total_end_debit += account.get('end_debit', 0.0)
             total_end_credit += account.get('end_credit', 0.0)
+            total_end_balance += account.get('end_balance', 0.0)
         
         response = {
             'accounts': accounts_data,
             'totals': {
                 'initial_debit': total_initial_debit,
                 'initial_credit': total_initial_credit,
+                'initial_balance': total_initial_balance,
                 'period_debit': total_debit,
                 'period_credit': total_credit,
+                'period_balance': total_period_balance,
                 'ending_debit': total_end_debit,
                 'ending_credit': total_end_credit,
+                'ending_balance': total_end_balance,
             },
             'company': request.env.company.name,
             'currency_symbol': request.env.company.currency_id.symbol,

@@ -308,10 +308,13 @@
                                         <th>Account</th>
                                         <th class="text-end">Initial Debit</th>
                                         <th class="text-end">Initial Credit</th>
-                                        <th class="text-end">Debit</th>
-                                        <th class="text-end">Credit</th>
+                                        <th class="text-end">Initial Balance</th>
+                                        <th class="text-end">Period Debit</th>
+                                        <th class="text-end">Period Credit</th>
+                                        <th class="text-end">Period Balance</th>
                                         <th class="text-end">Ending Debit</th>
                                         <th class="text-end">Ending Credit</th>
+                                        <th class="text-end">Ending Balance</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -321,10 +324,13 @@
                                             <td><t t-esc="account.name"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.initial_debit)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.initial_credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.initial_balance)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.debit)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.period_balance || account.balance)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.end_debit)"/></td>
                                             <td class="text-end"><t t-esc="this.formatNumber(account.end_credit)"/></td>
+                                            <td class="text-end"><t t-esc="this.formatNumber(account.end_balance)"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
@@ -333,10 +339,13 @@
                                         <td colspan="2">TOTAL</td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_debit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.initial_balance)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.period_debit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.period_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.period_balance)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.ending_debit)"/></td>
                                         <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.ending_credit)"/></td>
+                                        <td class="text-end"><t t-esc="this.formatNumber(state.reportData.totals.ending_balance)"/></td>
                                     </tr>
                                 </tfoot>
                             </table>
