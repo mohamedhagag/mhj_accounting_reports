@@ -283,7 +283,9 @@ export class FinancialReportBase extends Component {
                 || host?.querySelector('.mhj_report_content')
                 || host?.querySelector('.o_content');
             if (!reportElement) {
-                this.notification.add("Report container not found", { type: "warning" });
+                // Fallback: print the whole page when we cannot find the report container
+                // this.notification.add("Report container not found. Printing current page.", { type: "warning" });
+                window.print();
                 return;
             }
 
