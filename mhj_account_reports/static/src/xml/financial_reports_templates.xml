@@ -157,6 +157,56 @@
                             </div>
                         </div>
                     </div>
+                    <!-- General Ledger specific filters -->
+                    <div class="row mt-3" t-if="this.reportType === 'general_ledger'">
+                        <div class="col-md-4">
+                            <label>Sort By</label>
+                            <select class="form-control" t-model="state.filters.sortby">
+                                <option value="sort_date">Date</option>
+                                <option value="sort_journal_partner">Journal &amp; Partner</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="glInitialBalance" t-model="state.filters.initial_balance"/>
+                                <label class="form-check-label" for="glInitialBalance">Include Initial Balances</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partner Ledger specific filters -->
+                    <div class="row mt-3" t-if="this.reportType === 'partner_ledger'">
+                        <div class="col-md-4">
+                            <label>Partner Type</label>
+                            <select class="form-control" t-model="state.filters.result_selection">
+                                <option value="customer">Receivable Accounts</option>
+                                <option value="supplier">Payable Accounts</option>
+                                <option value="customer_supplier">Receivable and Payable Accounts</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row pt-2">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="plReconciled" t-model="state.filters.reconciled"/>
+                                        <label class="form-check-label" for="plReconciled">Show Reconciled</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="plAmountCurrency" t-model="state.filters.amount_currency"/>
+                                        <label class="form-check-label" for="plAmountCurrency">With Currency</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="plInitialBalance" t-model="state.filters.initial_balance"/>
+                                        <label class="form-check-label" for="plInitialBalance">Include Initial Balances</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </t>
 
