@@ -31,6 +31,35 @@ class AccountingReportsController(http.Controller):
             'lang': request.env.lang,
         }
 
+    def _build_move_line_domain(self, filters, ids=None, extra=None):
+        """Build an account.move.line domain honoring interactive filters."""
+        filters = filters or {}
+        domain = []
+        if ids:
+            domain.append(['id', 'in', ids])
+
+        if filters.get('date_from'):
+            domain.append(['date', '>=', filters['date_from']])
+        if filters.get('date_to'):
+            domain.append(['date', '<=', filters['date_to']])
+
+        move_state = filters.get('state', 'posted')
+        if move_state == 'posted':
+            domain.append(['parent_state', '=', 'posted'])
+
+        journal_ids = self._resolve_journal_ids(filters)
+        if journal_ids:
+            domain.append(['journal_id', 'in', journal_ids])
+
+        if filters.get('account_ids'):
+            domain.append(['account_id', 'in', filters['account_ids']])
+        if filters.get('partner_ids'):
+            domain.append(['partner_id', 'in', filters['partner_ids']])
+
+        if extra:
+            domain.extend(extra)
+        return domain
+
     @http.route('/mhj/accounting_reports/get_data', type='json', auth='user')
     def get_report_data(self, report_type, filters):
         """Get report data based on report type."""
@@ -582,179 +611,45 @@ class AccountingReportsController(http.Controller):
         _logger.info(f"Profit & Loss lines: {len(lines)}")
         return response
 
-    # ========== DRILLDOWN ROUTES ==========
-    @http.route('/mhj/accounting_reports/drilldown/account/<int:account_id>', type='json', auth='user')
-    def drilldown_account(self, account_id, filters=None):
-        """Get move lines for a specific account."""
-        try:
-            if not filters:
-                filters = {}
-            _logger.info(f"Drilldown account {account_id} with filters: {filters}")
-            
-            account = request.env['account.account'].browse(account_id)
-            if not account.exists():
-                return {'error': 'Account not found'}
-            
-            journal_ids = self._resolve_journal_ids(filters)
-            
-            # Build domain for move lines
-            domain = [('account_id', '=', account_id)]
-            if journal_ids:
-                domain.append(('journal_id', 'in', journal_ids))
-            if filters.get('date_from'):
-                domain.append(('date', '>=', filters.get('date_from')))
-            if filters.get('date_to'):
-                domain.append(('date', '<=', filters.get('date_to')))
-            if filters.get('state') == 'posted':
-                domain.append(('parent_state', '=', 'posted'))
-            if filters.get('partner_ids'):
-                domain.append(('partner_id', 'in', filters.get('partner_ids')))
-            
-            # Get move lines
-            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
-            
-            lines_data = []
-            for line in move_lines:
-                lines_data.append({
-                    'id': line.id,
-                    'date': line.date.isoformat() if line.date else '',
-                    'move_name': line.move_id.name,
-                    'partner': line.partner_id.name or '',
-                    'reference': line.ref or '',
-                    'debit': line.debit,
-                    'credit': line.credit,
-                    'balance': line.balance,
-                    'description': line.name or '',
-                })
-            
-            return {
-                'account_code': account.code,
-                'account_name': account.name,
-                'lines': lines_data,
-                'line_count': len(lines_data),
-            }
-        except Exception as e:
-            _logger.error(f"Error in drilldown_account: {str(e)}", exc_info=True)
-            return {'error': str(e)}
+    @http.route('/mhj/accounting_reports/drilldown_action', type='json', auth='user')
+    def get_drilldown_action(self, scope, ids, filters=None, name=None, model=None):
+        """Return an act_window for drilling down from interactive reports."""
+        filters = filters or {}
+        ids = ids or []
 
-    @http.route('/mhj/accounting_reports/drilldown/partner/<int:partner_id>', type='json', auth='user')
-    def drilldown_partner(self, partner_id, filters=None):
-        """Get move lines for a specific partner."""
-        try:
-            if not filters:
-                filters = {}
-            _logger.info(f"Drilldown partner {partner_id} with filters: {filters}")
-            
-            partner = request.env['res.partner'].browse(partner_id)
-            if not partner.exists():
-                return {'error': 'Partner not found'}
-            
-            journal_ids = self._resolve_journal_ids(filters)
-            
-            # Build domain for move lines
-            domain = [('partner_id', '=', partner_id)]
-            if journal_ids:
-                domain.append(('journal_id', 'in', journal_ids))
-            if filters.get('date_from'):
-                domain.append(('date', '>=', filters.get('date_from')))
-            if filters.get('date_to'):
-                domain.append(('date', '<=', filters.get('date_to')))
-            if filters.get('state') == 'posted':
-                domain.append(('parent_state', '=', 'posted'))
-            if filters.get('account_ids'):
-                domain.append(('account_id', 'in', filters.get('account_ids')))
-            
-            # Get move lines
-            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
-            
-            lines_data = []
-            for line in move_lines:
-                lines_data.append({
-                    'id': line.id,
-                    'date': line.date.isoformat() if line.date else '',
-                    'move_name': line.move_id.name,
-                    'account_code': line.account_id.code,
-                    'account_name': line.account_id.name,
-                    'reference': line.ref or '',
-                    'debit': line.debit,
-                    'credit': line.credit,
-                    'balance': line.balance,
-                    'description': line.name or '',
-                })
-            
-            return {
-                'partner_name': partner.name,
-                'lines': lines_data,
-                'line_count': len(lines_data),
-            }
-        except Exception as e:
-            _logger.error(f"Error in drilldown_partner: {str(e)}", exc_info=True)
-            return {'error': str(e)}
+        if not ids:
+            return {'error': 'No record ids provided for drilldown'}
 
-    @http.route('/mhj/accounting_reports/drilldown/financial_line/<int:line_id>', type='json', auth='user')
-    def drilldown_financial_line(self, line_id, filters=None):
-        """Get account move lines for a financial report line."""
-        try:
-            if not filters:
-                filters = {}
-            _logger.info(f"Drilldown financial line {line_id} with filters: {filters}")
-            
-            financial_line = request.env['account.financial.report'].browse(line_id)
-            if not financial_line.exists():
-                return {'error': 'Financial report line not found'}
-            
-            journal_ids = self._resolve_journal_ids(filters)
-            
-            # Get accounts linked to this financial line
-            account_ids = financial_line.account_ids.ids
-            if not account_ids and financial_line.account_type_ids:
-                # Get accounts by type
-                account_ids = request.env['account.account'].search([
-                    ('user_type_id', 'in', financial_line.account_type_ids.ids)
-                ]).ids
-            
-            if not account_ids:
-                return {
-                    'financial_line_name': financial_line.name,
-                    'lines': [],
-                    'line_count': 0,
-                }
-            
-            # Build domain for move lines
-            domain = [('account_id', 'in', account_ids)]
-            if journal_ids:
-                domain.append(('journal_id', 'in', journal_ids))
-            if filters.get('date_from'):
-                domain.append(('date', '>=', filters.get('date_from')))
-            if filters.get('date_to'):
-                domain.append(('date', '<=', filters.get('date_to')))
-            if filters.get('state') == 'posted':
-                domain.append(('parent_state', '=', 'posted'))
-            
-            # Get move lines
-            move_lines = request.env['account.move.line'].search(domain, order='date', limit=1000)
-            
-            lines_data = []
-            for line in move_lines:
-                lines_data.append({
-                    'id': line.id,
-                    'date': line.date.isoformat() if line.date else '',
-                    'move_name': line.move_id.name,
-                    'account_code': line.account_id.code,
-                    'account_name': line.account_id.name,
-                    'partner': line.partner_id.name or '',
-                    'reference': line.ref or '',
-                    'debit': line.debit,
-                    'credit': line.credit,
-                    'balance': line.balance,
-                    'description': line.name or '',
-                })
-            
-            return {
-                'financial_line_name': financial_line.name,
-                'lines': lines_data,
-                'line_count': len(lines_data),
-            }
-        except Exception as e:
-            _logger.error(f"Error in drilldown_financial_line: {str(e)}", exc_info=True)
-            return {'error': str(e)}
+        scope = scope or 'account'
+        domain = []
+        res_model = model
+
+        if scope == 'account':
+            res_model = 'account.move.line'
+            domain = self._build_move_line_domain(filters, extra=[['account_id', 'in', ids]])
+        elif scope == 'partner':
+            res_model = 'account.move.line'
+            domain = self._build_move_line_domain(filters, extra=[['partner_id', 'in', ids]])
+        elif scope == 'journal':
+            res_model = 'account.move.line'
+            domain = self._build_move_line_domain(filters, extra=[['journal_id', 'in', ids]])
+        elif scope == 'move_line':
+            res_model = res_model or 'account.move.line'
+            domain = self._build_move_line_domain(filters, ids=ids)
+        else:
+            res_model = res_model or model or 'account.move.line'
+            domain = [['id', 'in', ids]]
+
+        action = {
+            'type': 'ir.actions.act_window',
+            'name': name or 'Details',
+            'res_model': res_model,
+            'view_mode': 'list,form',
+            'domain': domain,
+            'target': 'current',
+            'context': {
+                'search_default_filter_by_company': True,
+                'active_test': False,
+            },
+        }
+        return action

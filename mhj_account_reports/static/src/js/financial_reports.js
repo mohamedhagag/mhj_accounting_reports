@@ -261,6 +261,34 @@ export class FinancialReportBase extends Component {
         });
     }
 
+    async openDrilldown(scope, ids, name = 'Details', options = {}) {
+        const targetIds = Array.isArray(ids) ? ids : [];
+        if (!targetIds.length) {
+            this.notification.add("No records to drill down.", { type: "warning" });
+            return;
+        }
+
+        try {
+            const action = await rpc('/mhj/accounting_reports/drilldown_action', {
+                scope,
+                ids: targetIds,
+                filters: this.state.filters,
+                name,
+                model: options.model,
+            });
+
+            if (!action || action.error) {
+                this.notification.add(action?.error || "Unable to open drilldown.", { type: "danger" });
+                return;
+            }
+
+            await this.actionService.doAction(action);
+        } catch (error) {
+            console.error('Drilldown error:', error);
+            this.notification.add("Failed to open drilldown: " + (error.message || error), { type: "danger" });
+        }
+    }
+
     async exportExcel() {
         try {
             this.notification.add("Generating Excel file from report... Please wait.", { type: "info" });
