@@ -24,9 +24,12 @@
         <field name="view_mode">list,pivot,graph</field>
     </record>
 
-    <menuitem id="menu_finance_entries_accounting_ledgers" name="Ledgers" parent="account.menu_finance_entries"
-              sequence="993">
-        <menuitem id="menu_action_account_moves_ledger_general" action="action_account_moves_ledger_general"
+    <menuitem id="menu_finance_entries_accounting_ledgers" name="Ledgers" 
+        parent="account.menu_finance_entries"
+        sequence="993">
+
+        <menuitem id="menu_action_account_moves_ledger_general" 
+                    action="action_account_moves_ledger_general"
                   groups="account.group_account_readonly" sequence="1"/>
         <menuitem id="menu_action_account_moves_ledger_partner" action="action_account_moves_ledger_partner"
                   groups="account.group_account_readonly" sequence="2"/>

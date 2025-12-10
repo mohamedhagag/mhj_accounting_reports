@@ -10,6 +10,18 @@ _logger = logging.getLogger(__name__)
 class AccountingReportsController(http.Controller):
     """Controller for interactive accounting reports."""
 
+    def _build_used_context(self, filters):
+        """Mirror wizard context so date_from/initial balance logic matches PDF reports."""
+        return {
+            'journal_ids': filters.get('journal_ids') or False,
+            'state': filters.get('state', 'posted'),
+            'date_from': filters.get('date_from') or False,
+            'date_to': filters.get('date_to') or False,
+            'strict_range': True if filters.get('date_from') else False,
+            'company_id': request.env.company.id,
+            'lang': request.env.lang,
+        }
+
     @http.route('/mhj/accounting_reports/get_data', type='json', auth='user')
     def get_report_data(self, report_type, filters):
         """Get report data based on report type."""
@@ -193,14 +205,7 @@ class AccountingReportsController(http.Controller):
         report_model = request.env['report.mhj_account_reports.report_general_ledger']
 
         # Context similar to wizard
-        used_context = {
-            'journal_ids': filters.get('journal_ids') or False,
-            'state': filters.get('state', 'posted'),
-            'date_from': filters.get('date_from') or False,
-            'date_to': filters.get('date_to') or False,
-            'strict_range': True if filters.get('date_from') else False,
-            'company_id': request.env.company.id,
-        }
+        used_context = self._build_used_context(filters)
 
         # Accounts: respect selection if provided
         account_ids = filters.get('account_ids') or []
@@ -266,14 +271,7 @@ class AccountingReportsController(http.Controller):
         _logger.info(f"_get_partner_ledger_data called with filters: {filters}")
         report_model = request.env['report.mhj_account_reports.report_partnerledger']
 
-        used_context = {
-            'journal_ids': filters.get('journal_ids') or False,
-            'state': filters.get('state', 'posted'),
-            'date_from': filters.get('date_from') or False,
-            'date_to': filters.get('date_to') or False,
-            'strict_range': True if filters.get('date_from') else False,
-            'company_id': request.env.company.id,
-        }
+        used_context = self._build_used_context(filters)
 
         partner_ids = filters.get('partner_ids') or []
         if partner_ids:
@@ -327,23 +325,14 @@ class AccountingReportsController(http.Controller):
         partner_rows = []
         for partner in partners:
             lines = report_model.with_context(ctx)._lines(data, partner)
-            
-            # Calculate totals from lines only (lines already include initial balance in running sum)
-            total_debit = sum(l.get('debit', 0.0) for l in lines if l.get('ref') != 'Initial Balance')
-            total_credit = sum(l.get('credit', 0.0) for l in lines if l.get('ref') != 'Initial Balance')
-            
-            # Get final running balance from last line
-            final_balance = lines[-1].get('progress', 0.0) if lines else 0.0
-            
-            # Get initial balance (first line if it exists)
-            init_bal = {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
-            if lines and lines[0].get('ref') == 'Initial Balance':
-                init_bal = {
-                    'debit': lines[0].get('debit', 0.0),
-                    'credit': lines[0].get('credit', 0.0),
-                    'balance': lines[0].get('progress', 0.0)
-                }
-            
+            # Reuse report helpers so interactive totals match PDF
+            init_bal = report_model.get_partner_initial_balance_safe(
+                data, partner, data['form'].get('date_from')
+            ) or {'debit': 0.0, 'credit': 0.0, 'balance': 0.0}
+            total_debit = report_model._sum_partner(data, partner, 'debit')
+            total_credit = report_model._sum_partner(data, partner, 'credit')
+            total_balance = report_model._sum_partner(data, partner, 'debit - credit')
+
             partner_rows.append({
                 'id': partner.id,
                 'name': partner.name,
@@ -352,7 +341,7 @@ class AccountingReportsController(http.Controller):
                 'lines': lines,
                 'total_debit': total_debit,
                 'total_credit': total_credit,
-                'total_balance': final_balance,
+                'total_balance': total_balance,
             })
 
         response = {

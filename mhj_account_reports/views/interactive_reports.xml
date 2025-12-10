@@ -34,7 +34,7 @@
     <!-- Interactive submenu -->
     <menuitem id="menu_interactive_reports_root"
               name="Interactive Reports"
-              sequence="0"
+              sequence="10"
               parent="menu_finance_pdf_reports"
               groups="account.group_account_manager,account.group_account_user"/>
 

@@ -3,22 +3,22 @@
 
   <menuitem id="menu_finance_pdf_reports"
     name="PDF Reports"
-    sequence="999"
+    sequence="10"
     parent="account.menu_finance_reports" />
 
   <menuitem id="menu_finance_legal_statement"
     name="Financial Reports PDF"
-    sequence="10"
+    sequence="20"
     parent="menu_finance_pdf_reports" />
 
   <menuitem id="menu_finance_partner_reports"
     name="Partner Reports PDF"
-    sequence="20"
+    sequence="30"
     parent="menu_finance_pdf_reports" />
 
   <menuitem id="menu_finance_audit_reports"
     name="Audit Reports PDF"
-    sequence="30"
+    sequence="40"
     parent="menu_finance_pdf_reports" />
 
   <record id="account.account_reports_management_menu" model="ir.ui.menu">

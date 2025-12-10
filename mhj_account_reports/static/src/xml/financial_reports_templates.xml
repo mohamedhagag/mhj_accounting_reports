@@ -335,7 +335,7 @@
                                         </tr>
                                         <t t-if="this.isExpanded(account.id || account.code)">
                                             <t t-foreach="account.move_lines || []" t-as="line" t-key="line.lid || line.id || line.ldate || line_index">
-                                                <tr class="account-line">
+                                                <tr class="account-line" t-att-class="line.lname === 'Initial Balance' ? 'table-warning' : ''">
                                                     <td></td>
                                                     <td><t t-esc="line.ldate"/></td>
                                                     <td><t t-esc="line.lcode"/></td>
@@ -406,7 +406,7 @@
                                         </tr>
                                         <t t-if="this.isExpanded(partner.id)">
                                             <t t-foreach="partner.lines || []" t-as="line" t-key="line.id || line.date || line_index">
-                                                <tr class="account-line">
+                                                <tr class="account-line" t-att-class="line.ref === 'Initial Balance' ? 'table-warning' : ''">
                                                     <td></td>
                                                     <td><t t-esc="line.displayed_name || line.name || line.ref"/></td>
                                                     <td class="text-end"><t t-esc="line.date"/></td>
