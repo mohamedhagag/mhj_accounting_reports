@@ -34,7 +34,7 @@ export class PartnerLedgerReport extends FinancialReportBase {
 
         // Get top 10 partners by outstanding balance
         const topPartners = data.partners
-            .sort((a, b) => Math.abs(b.balance || 0) - Math.abs(a.balance || 0))
+            .sort((a, b) => Math.abs(b.total_balance || 0) - Math.abs(a.total_balance || 0))
             .slice(0, 10);
 
         const ctx = this.chartRef.el.getContext('2d');
@@ -48,7 +48,7 @@ export class PartnerLedgerReport extends FinancialReportBase {
             data: {
                 labels: topPartners.map(p => (p.name || '').substring(0, 20)),
                 datasets: [{
-                    data: topPartners.map(p => Math.abs(parseFloat(p.balance || 0))),
+                    data: topPartners.map(p => Math.abs(parseFloat(p.total_balance || 0))),
                     backgroundColor: [
                         'rgba(75, 192, 192, 0.6)',
                         'rgba(255, 99, 132, 0.6)',
