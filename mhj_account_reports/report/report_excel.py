@@ -75,12 +75,18 @@ class GeneralLedgerXlsx(models.AbstractModel):
         worksheet.set_column('G:G', 15)  # Credit  
         worksheet.set_column('H:H', 15)  # Balance
 
-        # Title
-        worksheet.merge_range('A1:H1', 'General Ledger Report', title_format)
-
         # Report parameters
         row = 3
         form_data = report_data.get('data', {})
+        group_by_currency = bool(form_data.get('group_by_currency'))
+        show_currency = bool(form_data.get('show_currency') or group_by_currency)
+        last_col = 11 if show_currency else 7
+        if show_currency:
+            worksheet.set_column('I:I', 15)  # Currency
+            worksheet.set_column('J:L', 20)  # Currency amounts
+
+        worksheet.merge_range(0, 0, 0, last_col, 'General Ledger Report', title_format)
+
         date_from = form_data.get('date_from', '')
         date_to = form_data.get('date_to', '')
         target_move = form_data.get('target_move', 'posted')
@@ -91,6 +97,10 @@ class GeneralLedgerXlsx(models.AbstractModel):
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
         row += 1
         worksheet.write(row, 0, f'Include Initial Balance: {"Yes" if initial_balance else "No"}', text_format)
+        if show_currency:
+            worksheet.write(row, 2, 'Show Currency: Yes', text_format)
+        if group_by_currency:
+            worksheet.write(row, 4, 'Group by Currency: Yes', text_format)
         row += 2
 
         # Process accounts
@@ -99,46 +109,60 @@ class GeneralLedgerXlsx(models.AbstractModel):
         for account in accounts:
             # Account header
             account_name = f"{account.get('code', '')} - {account.get('name', '')}"
-            worksheet.merge_range(row, 0, row, 7, account_name, account_format)
+            worksheet.merge_range(row, 0, row, last_col, account_name, account_format)
             row += 1
 
             # Column headers for move lines
             headers = ['Date', 'Journal', 'Partner', 'Move', 'Entry Label', 'Debit', 'Credit', 'Balance']
+            if show_currency:
+                headers += ['Currency', 'Currency Debit', 'Currency Credit', 'Currency Balance']
             for col, header in enumerate(headers):
                 worksheet.write(row, col, header, header_format)
             row += 1
 
             # Move lines
-            move_lines = account.get('move_lines', [])
-            account_debit = 0.0
-            account_credit = 0.0
+            groups = (account.get('currency_groups', []) if group_by_currency else
+                      [{'move_lines': account.get('move_lines', [])}])
+            for group in groups:
+                if group_by_currency:
+                    group_currency = group['currency']
+                    worksheet.write(row, 4, f'{group_currency.name} Total:', account_format)
+                    for col, key in ((5, 'debit'), (6, 'credit'), (7, 'balance'),
+                                     (9, 'currency_debit'), (10, 'currency_credit'),
+                                     (11, 'currency_balance')):
+                        worksheet.write(row, col, group[key], number_format)
+                    worksheet.write(row, 8, group_currency.name, account_format)
+                    row += 1
 
-            for line in move_lines:
-                # Check if this is an initial balance line
-                is_initial_balance = line.get('lname', '') == 'Initial Balance'
+                for line in group['move_lines']:
+                    # Keep the opening row distinct within its currency group.
+                    is_initial_balance = line.get('is_initial_balance', False)
                 
-                # Use special formatting for initial balance lines
-                line_text_format = init_balance_format if is_initial_balance else text_format
-                line_number_format = init_number_format if is_initial_balance else number_format
-                line_date_format = init_balance_format if is_initial_balance else date_format
+                    line_text_format = init_balance_format if is_initial_balance else text_format
+                    line_number_format = init_number_format if is_initial_balance else number_format
+                    line_date_format = init_balance_format if is_initial_balance else date_format
                 
-                worksheet.write(row, 0, line.get('ldate', ''), line_date_format)
-                worksheet.write(row, 1, line.get('lcode', ''), line_text_format)
-                worksheet.write(row, 2, line.get('partner_name', ''), line_text_format)
-                worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
-                worksheet.write(row, 4, line.get('lname', ''), line_text_format)
+                    worksheet.write(row, 0, line.get('ldate', ''), line_date_format)
+                    worksheet.write(row, 1, line.get('lcode', ''), line_text_format)
+                    worksheet.write(row, 2, line.get('partner_name', ''), line_text_format)
+                    worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
+                    worksheet.write(row, 4, line.get('lname', ''), line_text_format)
 
-                debit = line.get('debit', 0.0)
-                credit = line.get('credit', 0.0)
-                balance = line.get('balance', 0.0)
+                    debit = line.get('debit', 0.0)
+                    credit = line.get('credit', 0.0)
+                    balance = (line.get('group_balance', line.get('balance', 0.0))
+                               if group_by_currency else line.get('balance', 0.0))
 
-                worksheet.write(row, 5, debit, line_number_format)
-                worksheet.write(row, 6, credit, line_number_format)
-                worksheet.write(row, 7, balance, line_number_format)
+                    worksheet.write(row, 5, debit, line_number_format)
+                    worksheet.write(row, 6, credit, line_number_format)
+                    worksheet.write(row, 7, balance, line_number_format)
+                    if show_currency:
+                        worksheet.write(row, 8, line['currency'].name, line_text_format)
+                        for col, key in ((9, 'currency_debit'), (10, 'currency_credit'),
+                                         (11, 'currency_balance')):
+                            worksheet.write(row, col, line[key], line_number_format)
 
-                account_debit += debit
-                account_credit += credit
-                row += 1
+                    row += 1
 
             # Account totals
             total_format = workbook.add_format({
@@ -147,9 +171,9 @@ class GeneralLedgerXlsx(models.AbstractModel):
             })
 
             worksheet.write(row, 4, 'Account Total:', account_format)
-            worksheet.write(row, 5, account_debit, total_format)
-            worksheet.write(row, 6, account_credit, total_format)
-            worksheet.write(row, 7, account_debit - account_credit, total_format)
+            worksheet.write(row, 5, account['debit'], total_format)
+            worksheet.write(row, 6, account['credit'], total_format)
+            worksheet.write(row, 7, account['balance'], total_format)
             row += 2
 
 
