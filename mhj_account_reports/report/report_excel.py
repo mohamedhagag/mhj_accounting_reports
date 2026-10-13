@@ -124,16 +124,6 @@ class GeneralLedgerXlsx(models.AbstractModel):
             groups = (account.get('currency_groups', []) if group_by_currency else
                       [{'move_lines': account.get('move_lines', [])}])
             for group in groups:
-                if group_by_currency:
-                    group_currency = group['currency']
-                    worksheet.write(row, 4, f'{group_currency.name} Total:', account_format)
-                    for col, key in ((5, 'debit'), (6, 'credit'), (7, 'balance'),
-                                     (9, 'currency_debit'), (10, 'currency_credit'),
-                                     (11, 'currency_balance')):
-                        worksheet.write(row, col, group[key], number_format)
-                    worksheet.write(row, 8, group_currency.name, account_format)
-                    row += 1
-
                 for line in group['move_lines']:
                     # Keep the opening row distinct within its currency group.
                     is_initial_balance = line.get('is_initial_balance', False)
@@ -164,6 +154,15 @@ class GeneralLedgerXlsx(models.AbstractModel):
 
                     row += 1
 
+                if group_by_currency:
+                    row = self._write_currency_totals(
+                        worksheet, row, (group,), account_format, number_format)
+
+            if show_currency and not group_by_currency:
+                row = self._write_currency_totals(
+                    worksheet, row, account.get('currency_groups', []),
+                    account_format, number_format)
+
             # Account totals
             total_format = workbook.add_format({
                 'bold': True, 'bg_color': '#FFE4B5', 'border': 1,
@@ -175,6 +174,19 @@ class GeneralLedgerXlsx(models.AbstractModel):
             worksheet.write(row, 6, account['credit'], total_format)
             worksheet.write(row, 7, account['balance'], total_format)
             row += 2
+
+    def _write_currency_totals(self, worksheet, row, groups, label_format, number_format):
+        """Write separate totals: amounts in different currencies cannot be added."""
+        for group in groups:
+            currency = group['currency']
+            worksheet.write(row, 4, f'{currency.name} Total:', label_format)
+            for col, key in ((5, 'debit'), (6, 'credit'), (7, 'balance'),
+                             (9, 'currency_debit'), (10, 'currency_credit'),
+                             (11, 'currency_balance')):
+                worksheet.write(row, col, group[key], number_format)
+            worksheet.write(row, 8, currency.name, label_format)
+            row += 1
+        return row
 
 
 class PartnerLedgerXlsx(models.AbstractModel):

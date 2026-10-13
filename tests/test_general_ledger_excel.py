@@ -7,9 +7,10 @@ from types import SimpleNamespace
 source = Path(__file__).resolve().parents[1] / 'mhj_account_reports/report/report_excel.py'
 module = ast.parse(source.read_text())
 klass = next(node for node in module.body if isinstance(node, ast.ClassDef) and node.name == 'GeneralLedgerXlsx')
-method = next(node for node in klass.body if isinstance(node, ast.FunctionDef) and node.name == '_generate_general_ledger_xlsx')
+methods = [node for node in klass.body if isinstance(node, ast.FunctionDef) and node.name in
+           ('_generate_general_ledger_xlsx', '_write_currency_totals')]
 namespace = {'XLSX_AVAILABLE': True}
-exec(compile(ast.Module(body=[method], type_ignores=[]), str(source), 'exec'), namespace)
+exec(compile(ast.Module(body=methods, type_ignores=[]), str(source), 'exec'), namespace)
 
 
 class Sheet:
@@ -64,7 +65,9 @@ class GeneralLedgerExcelTests(unittest.TestCase):
         report = SimpleNamespace(_get_report_values=lambda ids, data: report_data)
         env = type('Env', (), {'__getitem__': lambda self, name: report})()
         workbook = Workbook()
-        namespace['_generate_general_ledger_xlsx'](SimpleNamespace(env=env), workbook,
+        exporter = SimpleNamespace(env=env, _write_currency_totals=lambda *args:
+                                   namespace['_write_currency_totals'](None, *args))
+        namespace['_generate_general_ledger_xlsx'](exporter, workbook,
                                                     data, SimpleNamespace(ids=[]))
         return workbook.sheet
 
@@ -80,6 +83,19 @@ class GeneralLedgerExcelTests(unittest.TestCase):
         self.assertIn('Currency Balance', sheet.cells.values())
         self.assertIn(6, [value for (row, col), value in sheet.cells.items() if col == 11])
         self.assertIn(4, [value for (row, col), value in sheet.cells.items() if col == 10])
+        total_rows = [row for (row, col), value in sheet.cells.items()
+                      if col == 4 and value == 'USD Total:']
+        self.assertEqual(len(total_rows), 1)
+        egp_totals = [row for (row, col), value in sheet.cells.items()
+                      if col == 4 and value == 'EGP Total:']
+        self.assertEqual(len(egp_totals), 1)
+        self.assertEqual(sheet.cells[egp_totals[0], 11], 100)
+        self.assertEqual(sheet.cells[total_rows[0], 9], 10)
+        self.assertEqual(sheet.cells[total_rows[0], 10], 4)
+        self.assertEqual(sheet.cells[total_rows[0], 11], 6)
+        last_detail_row = max(row for (row, col), value in sheet.cells.items()
+                              if col == 3 and value == 'INV/2')
+        self.assertGreater(total_rows[0], last_detail_row)
 
     def test_grouped_currency_totals_and_balances(self):
         sheet = self.render(group_by_currency=True)
@@ -89,6 +105,9 @@ class GeneralLedgerExcelTests(unittest.TestCase):
         self.assertEqual(sheet.cells[usd_rows[0], 11], 6)
         egp_line_rows = [row for (row, col), value in sheet.cells.items() if col == 3 and value == 'INV/2']
         self.assertEqual(sheet.cells[egp_line_rows[0], 7], 100)
+        usd_last_line = max(row for (row, col), value in sheet.cells.items()
+                            if col == 3 and value == 'INV/1')
+        self.assertGreater(usd_rows[0], usd_last_line)
 
 
 if __name__ == '__main__':

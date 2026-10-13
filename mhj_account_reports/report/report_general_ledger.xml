@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <template id="general_ledger_currency_total">
+<tr style="font-weight: bold; background-color: #eeeeee;">
+<td colspan="6"><span t-esc="currency_group['currency'].name"/> Total</td><td groups="analytic.group_analytic_accounting"/>
+<td class="text-end"><span t-esc="currency_group['debit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
+<td class="text-end"><span t-esc="currency_group['credit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
+<td class="text-end"><span t-esc="currency_group['balance']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
+<td><span t-esc="currency_group['currency'].name"/></td><td class="text-end"><span t-esc="currency_group['currency_debit']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
+<td class="text-end"><span t-esc="currency_group['currency_credit']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
+<td class="text-end"><span t-esc="currency_group['currency_balance']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
+</tr>
+    </template>
+
     <template id="report_general_ledger">
         <t t-call="web.html_container">
             <t t-set="data_report_margin_top" t-value="12"/>
@@ -92,15 +104,7 @@
                                     <t t-if="show_currency"><td/><td/><td/><td/></t>
                                 </tr>
 <t t-foreach="account['currency_groups'] if data.get('group_by_currency') else [{'move_lines': account['move_lines']}]" t-as="currency_group">
-<tr t-if="data.get('group_by_currency')" style="font-weight: bold; background-color: #eeeeee;">
-<td colspan="6"><span t-esc="currency_group['currency'].name"/></td><td groups="analytic.group_analytic_accounting"/>
-<td class="text-end"><span t-esc="currency_group['debit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
-<td class="text-end"><span t-esc="currency_group['credit']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
-<td class="text-end"><span t-esc="currency_group['balance']" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
-<td><span t-esc="currency_group['currency'].name"/></td><td class="text-end"><span t-esc="currency_group['currency_debit']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
-<td class="text-end"><span t-esc="currency_group['currency_credit']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
-<td class="text-end"><span t-esc="currency_group['currency_balance']" t-options="{'widget': 'monetary', 'display_currency': currency_group['currency']}"/></td>
-</tr>
+
                                 <tr t-foreach="currency_group['move_lines']" t-as="line" t-att-class="'mhj-opening' if line.get('is_initial_balance') else ''">
                                     <td><span t-esc="line['ldate']"/></td>
                                     <td><span t-esc="line['lcode']"/></td>
@@ -122,7 +126,12 @@
                                     </td>
 <t t-if="show_currency"><td><span t-esc="line['currency'].name"/></td><td class="text-end"><span t-esc="line['currency_debit']" t-options="{'widget': 'monetary', 'display_currency': line['currency']}"/></td><td class="text-end"><span t-esc="line['currency_credit']" t-options="{'widget': 'monetary', 'display_currency': line['currency']}"/></td><td class="text-end"><span t-esc="line['currency_balance']" t-options="{'widget': 'monetary', 'display_currency': line['currency']}"/></td></t>
                                 </tr>
+                                    <t t-if="data.get('group_by_currency')" t-call="mhj_account_reports.general_ledger_currency_total"/>
 </t>
+                                <t t-if="show_currency and not data.get('group_by_currency')"
+                                   t-foreach="account['currency_groups']" t-as="currency_group">
+                                    <t t-call="mhj_account_reports.general_ledger_currency_total"/>
+                                </t>
                             </t>
                         </tbody>
                     </table>
