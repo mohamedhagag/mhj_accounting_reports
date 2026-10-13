@@ -43,14 +43,14 @@ class GeneralLedgerExcelTests(unittest.TestCase):
     def render(self, show_currency=False, group_by_currency=False):
         usd = SimpleNamespace(name='USD')
         egp = SimpleNamespace(name='EGP')
-        opening = dict(ldate='2026-01-01', lcode='', partner_name='', move_name='Initial Balance',
+        opening = dict(ldate='2026-01-01', journal_name='', partner_name='', move_name='Initial Balance',
                        lname='Initial Balance', debit=500, credit=0, balance=500, group_balance=500,
                        currency=usd, currency_debit=10, currency_credit=0, currency_balance=10,
                        is_initial_balance=True)
-        sale = dict(ldate='2026-01-02', lcode='SAJ', partner_name='Customer', move_name='INV/1',
+        sale = dict(ldate='2026-01-02', journal_name='Sales Journal', partner_name='Customer', move_name='INV/1',
                     lname='Invoice', debit=0, credit=200, balance=300, group_balance=300,
                     currency=usd, currency_debit=0, currency_credit=4, currency_balance=6)
-        egp_line = dict(ldate='2026-01-03', lcode='SAJ', partner_name='Customer', move_name='INV/2',
+        egp_line = dict(ldate='2026-01-03', journal_name='Sales Journal', partner_name='Customer', move_name='INV/2',
                         lname='Invoice', debit=100, credit=0, balance=400, group_balance=100,
                         currency=egp, currency_debit=100, currency_credit=0, currency_balance=100)
         lines = [opening, sale, egp_line]
@@ -81,6 +81,7 @@ class GeneralLedgerExcelTests(unittest.TestCase):
         sheet = self.render(show_currency=True)
         self.assertEqual(sheet.merges[0][3], 11)
         self.assertIn('Currency Balance', sheet.cells.values())
+        self.assertIn('Sales Journal', sheet.cells.values())
         self.assertIn(6, [value for (row, col), value in sheet.cells.items() if col == 11])
         self.assertIn(4, [value for (row, col), value in sheet.cells.items() if col == 10])
         total_rows = [row for (row, col), value in sheet.cells.items()

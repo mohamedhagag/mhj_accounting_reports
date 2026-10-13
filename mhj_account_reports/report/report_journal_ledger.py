@@ -111,7 +111,6 @@ class ReportJournalLedger(models.AbstractModel):
             if journal_id not in journals_data:
                 journals_data[journal_id] = {
                     'journal_id': journal_id,
-                    'journal_code': move_line.journal_id.code,
                     'journal_name': move_line.journal_id.name,
                     'accounts': {}
                 }
@@ -147,7 +146,7 @@ class ReportJournalLedger(models.AbstractModel):
         total_credit = 0
         
         for journal_id, journal_data in sorted(journals_data.items(), 
-                                              key=lambda x: x[1]['journal_code']):
+                                              key=lambda x: x[1]['journal_name']):
             account_list = []
             journal_debit = 0
             journal_credit = 0
@@ -180,7 +179,6 @@ class ReportJournalLedger(models.AbstractModel):
                 journal_credit += account_credit
             
             journal_list.append({
-                'journal_code': journal_data['journal_code'],
                 'journal_name': journal_data['journal_name'],
                 'journal_id': journal_id,
                 'accounts': account_list,

@@ -36,12 +36,14 @@ class ReportPartnerLedger(models.AbstractModel):
             initial_balance = initial_data.get('balance', 0.0) if initial_data else 0.0
             
             # Base query parameters
-            base_params = [partner.id, tuple(data['computed']['move_state']), 
+            base_params = [self.env.context.get('lang') or 'en_US',
+                          partner.id, tuple(data['computed']['move_state']),
                           tuple(data['computed']['account_ids'])] + query_get_data[2]
             
             # Base query without LIMIT/OFFSET
             base_query = """
-                SELECT "account_move_line".id, "account_move_line".date, j.code, 
+                SELECT "account_move_line".id, "account_move_line".date,
+                       COALESCE(j.name->>%s, j.name->>'en_US') AS journal_name,
                        acc.name->>'en_US' as a_name, "account_move_line".ref, 
                        m.name as move_name, "account_move_line".name, 
                        "account_move_line".debit, "account_move_line".credit, 

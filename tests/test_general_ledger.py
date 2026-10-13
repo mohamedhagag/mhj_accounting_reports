@@ -8,7 +8,7 @@ source = Path(__file__).resolve().parents[1] / 'mhj_account_reports/report/repor
 module = ast.parse(source.read_text())
 report = next(node for node in module.body if isinstance(node, ast.ClassDef))
 methods = [node for node in report.body if isinstance(node, ast.FunctionDef) and node.name in (
-    '_calculate_account_totals', '_get_initial_balances')]
+    '_calculate_account_totals', '_get_initial_balances', '_get_paginated_move_lines')]
 namespace = {}
 exec(compile(ast.Module(body=methods, type_ignores=[]), str(source), 'exec'), namespace)
 
@@ -90,6 +90,35 @@ class LedgerTests(unittest.TestCase):
         lines = {7: []}
         namespace['_get_initial_balances'](SimpleNamespace(env=env), SimpleNamespace(ids=[7]), False, False, lines)
         self.assertEqual(lines[7][0]['balance'], 500)
+
+    def test_journal_name_query_uses_report_language(self):
+        class MoveLine:
+            def with_context(inner, context):
+                return inner
+
+            def _query_get(inner):
+                return ('account_move_line', 'account_move_line.date >= %s', ['2026-01-01'])
+
+        class Cursor:
+            calls = 0
+
+            def execute(inner, sql, params):
+                self.assertIn("COALESCE(j.name->>%s, j.name->>'en_US') AS journal_name", sql)
+                self.assertEqual(params[:3], ('ar_001', 7, '2026-01-01'))
+
+            def dictfetchall(inner):
+                inner.calls += 1
+                if inner.calls == 1:
+                    return [dict(account_id=7, journal_name='مبيعات', debit=100,
+                                 credit=0)]
+                return []
+
+        env = type('Env', (), {'context': {'lang': 'ar_001'}, 'cr': Cursor(),
+                              '__getitem__': lambda env, name: MoveLine()})()
+        lines = {7: []}
+        namespace['_get_paginated_move_lines'](SimpleNamespace(env=env),
+            [self.account], False, False, 'sort_date', lines, 1)
+        self.assertEqual(lines[7][0]['journal_name'], 'مبيعات')
 
 
 if __name__ == '__main__':

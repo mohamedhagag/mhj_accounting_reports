@@ -41,7 +41,7 @@ class Workbook:
 class PartnerExcelTests(unittest.TestCase):
     def render(self, with_currency):
         currency = SimpleNamespace(name='USD')
-        lines = [dict(date='2026-01-02', code='SAJ', a_name='Receivable', move_name='INV/1',
+        lines = [dict(date='2026-01-02', journal_name='Sales Journal', a_name='Receivable', move_name='INV/1',
                       displayed_name='Invoice', debit=100.0, credit=0.0, progress=100.0,
                       currency_id=currency, amount_currency=25.0)]
         report_data = {
@@ -62,6 +62,7 @@ class PartnerExcelTests(unittest.TestCase):
         self.assertEqual(sheet.merges[0][3], 9)
         self.assertIn('Amount in Currency', sheet.cells.values())
         self.assertIn('USD', sheet.cells.values())
+        self.assertIn('Sales Journal', sheet.cells.values())
         self.assertIn(25.0, [value for (row, col), value in sheet.cells.items() if col == 9])
 
     def test_currency_columns_hidden_when_option_off(self):

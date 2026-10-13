@@ -115,7 +115,7 @@ class ReportGeneralLedger(models.AbstractModel):
         currency_select = 'l.currency_id' if by_currency else 'NULL::integer'
         currency_group = ', l.currency_id' if by_currency else ''
         sql = """SELECT 0 AS lid, l.account_id, %s AS ldate,
-            '' AS lcode, SUM(l.amount_currency) AS amount_currency,
+            '' AS journal_name, SUM(l.amount_currency) AS amount_currency,
             '' AS analytic_account_id, '' AS lref, 'Initial Balance' AS lname,
             GREATEST(SUM(l.balance), 0) AS debit,
             GREATEST(-SUM(l.balance), 0) AS credit,
@@ -166,7 +166,9 @@ class ReportGeneralLedger(models.AbstractModel):
             while True:
                 # Optimized query with LIMIT/OFFSET for pagination
                 sql = """SELECT l.id AS lid, l.account_id AS account_id, 
-                    l.date AS ldate, j.code AS lcode, l.currency_id, 
+                    l.date AS ldate,
+                    COALESCE(j.name->>%s, j.name->>'en_US') AS journal_name,
+                    l.currency_id,
                     l.amount_currency, '' AS analytic_account_id,
                     l.ref AS lref, l.name AS lname, COALESCE(l.debit,0) AS debit, 
                     COALESCE(l.credit,0) AS credit, m.name AS move_name, 
@@ -180,7 +182,8 @@ class ReportGeneralLedger(models.AbstractModel):
                     WHERE l.account_id = %s """ + filters + \
                     " ORDER BY " + sql_sort + " LIMIT %s OFFSET %s"
                 
-                params = (account.id,) + tuple(where_params) + (move_line_limit, offset)
+                params = (self.env.context.get('lang') or 'en_US', account.id) + \
+                    tuple(where_params) + (move_line_limit, offset)
                 cr.execute(sql, params)
                 
                 batch_rows = cr.dictfetchall()
@@ -282,11 +285,11 @@ class ReportGeneralLedger(models.AbstractModel):
             raise UserError(_('You must define a Start Date to include Initial Balances'))
         sortby = data['form'].get('sortby', 'sort_date')
         display_account = data['form']['display_account']
-        codes = []
+        journal_names = []
         if data['form'].get('journal_ids', False):
-            codes = [journal.code for journal in
-                     self.env['account.journal'].search(
-                         [('id', 'in', data['form']['journal_ids'])])]
+            journal_names = [journal.name for journal in
+                             self.env['account.journal'].search(
+                                 [('id', 'in', data['form']['journal_ids'])])]
         analytic_account_ids = False
         if data['form'].get('analytic_account_ids', False):
             analytic_account_ids = self.env['account.analytic.account'].search(
@@ -323,7 +326,7 @@ class ReportGeneralLedger(models.AbstractModel):
             'docs': docs,
             'time': time,
             'Accounts': accounts_res,
-            'print_journal': codes,
+            'print_journal': journal_names,
             'accounts': accounts,
             'partner_ids': partner_ids,
             'analytic_account_ids': analytic_account_ids,

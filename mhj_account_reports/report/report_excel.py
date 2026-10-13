@@ -133,7 +133,7 @@ class GeneralLedgerXlsx(models.AbstractModel):
                     line_date_format = init_balance_format if is_initial_balance else date_format
                 
                     worksheet.write(row, 0, line.get('ldate', ''), line_date_format)
-                    worksheet.write(row, 1, line.get('lcode', ''), line_text_format)
+                    worksheet.write(row, 1, line.get('journal_name', ''), line_text_format)
                     worksheet.write(row, 2, line.get('partner_name', ''), line_text_format)
                     worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
                     worksheet.write(row, 4, line.get('lname', ''), line_text_format)
@@ -247,7 +247,7 @@ class PartnerLedgerXlsx(models.AbstractModel):
 
         # Set column widths
         worksheet.set_column('A:A', 12)  # Date
-        worksheet.set_column('B:B', 15)  # Journal
+        worksheet.set_column('B:B', 25)  # Journal name
         worksheet.set_column('C:C', 20)  # Account
         worksheet.set_column('D:D', 30)  # Move
         worksheet.set_column('E:E', 40)  # Entry Label
@@ -315,7 +315,7 @@ class PartnerLedgerXlsx(models.AbstractModel):
                 line_date_format = init_balance_format if is_initial_balance else date_format
 
                 worksheet.write(row, 0, line.get('date', ''), line_date_format)
-                worksheet.write(row, 1, line.get('code', ''), line_text_format)
+                worksheet.write(row, 1, line.get('journal_name', ''), line_text_format)
                 worksheet.write(row, 2, line.get('a_name', ''), line_text_format)
                 worksheet.write(row, 3, line.get('move_name', ''), line_text_format)
                 worksheet.write(row, 4, line.get('displayed_name', ''), line_text_format)

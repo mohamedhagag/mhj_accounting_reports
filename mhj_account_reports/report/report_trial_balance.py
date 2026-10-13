@@ -96,17 +96,17 @@ class ReportTrialBalance(models.AbstractModel):
             context['analytic_account_ids'] = analytic_account_ids
             analytic_accounts = [account.name for account in analytic_account_ids]
         account_res = self.with_context(context)._get_accounts(accounts, display_account)
-        codes = []
+        journal_names = []
         if data['form'].get('journal_ids', False):
-            codes = [journal.code for journal in
-                     self.env['account.journal'].search(
-                         [('id', 'in', data['form']['journal_ids'])])]
+            journal_names = [journal.name for journal in
+                             self.env['account.journal'].search(
+                                 [('id', 'in', data['form']['journal_ids'])])]
         return {
             'doc_ids': self.ids,
             'doc_model': model,
             'data': data['form'],
             'docs': docs,
-            'print_journal': codes,
+            'print_journal': journal_names,
             'analytic_accounts': analytic_accounts,
             'time': time,
             'Accounts': account_res,
