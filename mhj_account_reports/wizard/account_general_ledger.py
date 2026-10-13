@@ -13,6 +13,15 @@ class AccountReportGeneralLedger(models.TransientModel):
              'to display the amount of debit/credit/balance that precedes '
              'the filter you have set.'
     )
+    show_currency = fields.Boolean(
+        string='Show Currency Debit/Credit/Balance',
+        help='Show transaction currency amounts with a separate running balance for each currency.'
+    )
+    group_by_currency = fields.Boolean(
+        string='Group by Currency',
+        help='Group journal items by currency within each account.'
+    )
+
     sortby = fields.Selection(
         [('sort_date', 'Date'), ('sort_journal_partner', 'Journal & Partner')],
         string='Sort by', required=True, default='sort_date'
@@ -22,9 +31,13 @@ class AccountReportGeneralLedger(models.TransientModel):
         'account_id', 'journal_id', string='Journals', required=True
     )
 
+    @api.onchange('date_from')
+    def _onchange_date_from(self):
+        self.initial_balance = bool(self.date_from)
+
     def _get_report_data(self, data):
         data = self.pre_print_report(data)
-        data['form'].update(self.read(['initial_balance', 'sortby'])[0])
+        data['form'].update(self.read(['initial_balance', 'sortby', 'show_currency', 'group_by_currency'])[0])
         if data['form'].get('initial_balance') and not data['form'].get('date_from'):
             raise UserError(_("You must define a Start Date to include Initial Balances"))
         records = self.env[data['model']].browse(data.get('ids', []))
@@ -36,6 +49,6 @@ class AccountReportGeneralLedger(models.TransientModel):
 
     def _print_excel_report(self, data):
         # Extend the base data with general ledger specific fields
-        data['form'].update(self.read(['initial_balance', 'sortby'])[0])
+        data['form'].update(self.read(['initial_balance', 'sortby', 'show_currency', 'group_by_currency'])[0])
         records, data = self._get_report_data(data)
         return self.env.ref('mhj_account_reports.action_report_general_ledger_xlsx').report_action(records, data=data)

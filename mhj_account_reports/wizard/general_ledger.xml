@@ -21,6 +21,8 @@
                     <field name="sortby" widget="radio"/>
                     <field name="display_account" widget="radio"/>
                     <field name="initial_balance"/>
+                    <field name="show_currency"/>
+                    <field name="group_by_currency"/>
                     <newline/>
                 </xpath>
             </data>
