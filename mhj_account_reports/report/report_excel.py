@@ -218,10 +218,14 @@ class PartnerLedgerXlsx(models.AbstractModel):
         worksheet.set_column('F:F', 15)  # Debit
         worksheet.set_column('G:G', 15)  # Credit  
         worksheet.set_column('H:H', 15)  # Balance
-        worksheet.set_column('I:I', 15)  # Currency
+        show_currency = bool(data.get('form', {}).get('amount_currency'))
+        if show_currency:
+            worksheet.set_column('I:I', 15)  # Currency
+            worksheet.set_column('J:J', 20)  # Amount in Currency
 
         # Title
-        worksheet.merge_range('A1:I1', 'Partner Ledger Report', title_format)
+        last_col = 9 if show_currency else 7
+        worksheet.merge_range(0, 0, 0, last_col, 'Partner Ledger Report', title_format)
 
         # Report parameters
         row = 3
@@ -236,6 +240,8 @@ class PartnerLedgerXlsx(models.AbstractModel):
         worksheet.write(row, 4, f'Target Moves: {target_move.title()}', text_format)
         row += 1
         worksheet.write(row, 0, f'Include Initial Balance: {"Yes" if initial_balance else "No"}', text_format)
+        if show_currency:
+            worksheet.write(row, 2, 'With Currency: Yes', text_format)
         row += 2
 
         # Process partners
@@ -247,11 +253,13 @@ class PartnerLedgerXlsx(models.AbstractModel):
         for partner in partners:
             # Partner header
             partner_name = partner.name or 'Unknown Partner'
-            worksheet.merge_range(row, 0, row, 8, partner_name, partner_format)
+            worksheet.merge_range(row, 0, row, last_col, partner_name, partner_format)
             row += 1
 
             # Column headers for move lines
-            headers = ['Date', 'Journal', 'Account', 'Move', 'Entry Label', 'Debit', 'Credit', 'Balance', 'Currency']
+            headers = ['Date', 'Journal', 'Account', 'Move', 'Entry Label', 'Debit', 'Credit', 'Balance']
+            if show_currency:
+                headers += ['Currency', 'Amount in Currency']
             for col, header in enumerate(headers):
                 worksheet.write(row, col, header, header_format)
             row += 1
@@ -279,12 +287,15 @@ class PartnerLedgerXlsx(models.AbstractModel):
                 debit = line.get('debit', 0.0)
                 credit = line.get('credit', 0.0)
                 balance = line.get('progress', 0.0)
-                currency = line.get('currency_code', '')
 
                 worksheet.write(row, 5, debit, line_number_format)
                 worksheet.write(row, 6, credit, line_number_format)
                 worksheet.write(row, 7, balance, line_number_format)
-                worksheet.write(row, 8, currency, line_text_format)
+                if show_currency:
+                    currency = line.get('currency_id')
+                    worksheet.write(row, 8, currency.name if currency else '', line_text_format)
+                    if currency and not is_initial_balance:
+                        worksheet.write(row, 9, line.get('amount_currency') or 0.0, line_number_format)
                 row += 1
 
             # Partner totals

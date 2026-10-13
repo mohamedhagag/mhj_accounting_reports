@@ -7,6 +7,7 @@
             <t t-set="data_report_header_spacing" t-value="9"/>
             <t t-set="data_report_dpi" t-value="110"/>
             <t t-call="web.internal_layout">
+                <t t-call="mhj_account_reports.report_column_colors"/>
                 <div class="page">
                     <h2><span t-esc="res_company.name"/>: Trial Balance</h2>
 
@@ -46,7 +47,7 @@
                         </div>
                     </div>
 
-                    <table class="table table-sm table-reports">
+                    <table class="table table-sm table-reports mhj-columns">
                         <thead>
                             <tr>
                                 <th>Code</th>
