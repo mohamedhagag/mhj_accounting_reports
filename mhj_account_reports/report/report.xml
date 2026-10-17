@@ -1,26 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="report_column_colors">
+    <template id="report_row_stripes">
         <style type="text/css">
-            /* Light Material colors make columns easier to follow across wide reports. */
-            .page table.mhj-columns tr &gt; th,
-            .page table.mhj-columns tr &gt; td {
+            .page table.mhj-striped tr &gt; th,
+            .page table.mhj-striped tr &gt; td {
                 box-shadow: none !important;
                 border-color: #eceff1 !important;
             }
-            .page table.mhj-columns tr &gt; th:nth-child(5n+1),
-            .page table.mhj-columns tr &gt; td:nth-child(5n+1) { background-color: #e3f2fd !important; }
-            .page table.mhj-columns tr &gt; th:nth-child(5n+2),
-            .page table.mhj-columns tr &gt; td:nth-child(5n+2) { background-color: #e8f5e9 !important; }
-            .page table.mhj-columns tr &gt; th:nth-child(5n+3),
-            .page table.mhj-columns tr &gt; td:nth-child(5n+3) { background-color: #fff8e1 !important; }
-            .page table.mhj-columns tr &gt; th:nth-child(5n+4),
-            .page table.mhj-columns tr &gt; td:nth-child(5n+4) { background-color: #f3e5f5 !important; }
-            .page table.mhj-columns tr &gt; th:nth-child(5n),
-            .page table.mhj-columns tr &gt; td:nth-child(5n) { background-color: #e0f7fa !important; }
-            .page table.mhj-columns tr.mhj-opening &gt; td {
-                background-color: #fff2cc !important;
+            .page table.mhj-striped &gt; thead &gt; tr &gt; th,
+            .page table.mhj-striped &gt; tbody &gt; tr:nth-child(odd) &gt; th,
+            .page table.mhj-striped &gt; tbody &gt; tr:nth-child(odd) &gt; td {
+                background-color: #ffffff !important;
+            }
+            .page table.mhj-striped &gt; tbody &gt; tr:nth-child(even) &gt; th,
+            .page table.mhj-striped &gt; tbody &gt; tr:nth-child(even) &gt; td {
+                background-color: #f3f4f6 !important;
             }
         </style>
     </template>

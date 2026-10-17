@@ -8,7 +8,7 @@
             <t t-set="data_report_dpi" t-value="110"/>
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.internal_layout">
-                    <t t-call="mhj_account_reports.report_column_colors"/>
+                    <t t-call="mhj_account_reports.report_row_stripes"/>
                 <div class="page">
                         <h2><t t-esc="o.name"/> Journal</h2>
 
@@ -33,7 +33,7 @@
                             </div>
                         </div>
 
-                        <table class="table table-sm table-reports mhj-columns">
+                        <table class="table table-sm table-reports mhj-striped">
                             <thead>
                                 <tr>
                                     <th>Move</th>
@@ -76,7 +76,7 @@
 
                         <div class="row">
                             <div class="col-4">
-                                <table class="table table-sm table-reports mhj-columns">
+                                <table class="table table-sm table-reports mhj-striped">
                                     <thead>
                                         <tr><th colspan="3">Tax Declaration</th></tr>
                                         <tr>
